@@ -26,9 +26,6 @@ function init() {
 
     renderAssets();
     setupEventListeners();
-
-    // Attempt to fetch real data from the API if implemented
-    // fetchAnalysisData();
 }
 
 function renderAssets() {
