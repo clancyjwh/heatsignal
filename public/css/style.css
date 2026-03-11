@@ -102,32 +102,35 @@ body {
     padding: 1.5rem;
 }
 
-/* Dashboard Header - Condensed */
+/* Dashboard Header - Absolute Single Row */
 .dashboard-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--card-border);
+    flex-wrap: nowrap;
 }
 
 .page-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     white-space: nowrap;
+    margin: 0;
 }
 
 .search-container {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    padding: 0.4rem 0.75rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex: 1;
-    max-width: 300px;
+    flex: 2;
+    max-width: 400px;
 }
 
 .search-container input {
@@ -137,6 +140,32 @@ body {
     color: var(--text-primary);
     width: 100%;
     font-size: 0.85rem;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+}
+
+.header-controls select {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    outline: none;
+    font-size: 0.85rem;
+}
+
+.global-sentiment {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.sentiment-value.positive {
+    color: var(--accent-green);
+    font-weight: 700;
 }
 
 .header-controls select {
