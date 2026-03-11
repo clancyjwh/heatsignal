@@ -259,11 +259,8 @@ function getValueIntensityClass(val) {
     if (isNaN(num) || num === 0) return 'val-zero';
     
     const abs = Math.abs(num);
-    let level = 1;
-    if (abs >= 10) level = 5;
-    else if (abs >= 5) level = 4;
-    else if (abs >= 1) level = 3;
-    else if (abs >= 0.1) level = 2;
+    // Map 0.1-10 to 1-10
+    let level = Math.min(10, Math.max(1, Math.ceil(abs)));
 
     return num > 0 ? `val-p${level}` : `val-n${level}`;
 }
@@ -322,70 +319,76 @@ async function submitToWebhook(csv) {
     }
 }
 
-function renderBalancingResults(data) {
-    if (!Array.isArray(data) || data.length === 0) return;
+function parseConcatenatedJson(str) {
+    if (!str) return [];
+    try {
+        // Handle format: {"A":"B"}{"C":"D"} -> [{"A":"B"},{"C":"D"}]
+        const formatted = '[' + str.replace(/\}\s*\{/g, '},{') + ']';
+        return JSON.parse(formatted);
+    } catch (e) {
+        console.error('JSON Parse Error:', e);
+        return [];
+    }
+}
 
+function renderBalancingResults(result) {
     document.getElementById('upload-area').style.display = 'none';
     document.getElementById('balancing-results-container').style.display = 'block';
+
+    // 1. Handle Lists
+    const list1El = document.getElementById('list-1-content');
+    const list2El = document.getElementById('list-2-content');
+    
+    if (list1El) list1El.textContent = result["List 1"] || "No data available";
+    if (list2El) list2El.textContent = result["List 2"] || "No data available";
+
+    // 2. Parse Balance Data
+    const balanceData = parseConcatenatedJson(result["Balance"]);
+    if (balanceData.length === 0) return;
 
     const thead = document.getElementById('balancing-thead');
     const tbody = document.getElementById('balancing-tbody');
     const tfoot = document.getElementById('balancing-tfoot');
 
-    const headers = Object.keys(data[0]);
-    // Add "Change" header
-    headers.push('Change');
-
-    thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+    // Expected columns: Pair, Old Ratio, New Ratio, Ratio Change
+    const columns = ['Pair', 'Old Ratio', 'New Ratio', 'Ratio Change'];
+    thead.innerHTML = `<tr>${columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
 
     let html = '';
-    const columnSums = {};
+    const columnSums = { 'Old Ratio': 0, 'New Ratio': 0, 'Ratio Change': 0 };
 
-    data.forEach((row, rowIndex) => {
+    balanceData.forEach(row => {
         html += '<tr>';
-        const originalRow = originalExcelData[rowIndex] || {};
-        
-        headers.forEach(h => {
-            if (h === 'Change') {
-                // Heuristic: sum all numeric changes in the row
-                let totalDelta = 0;
-                Object.keys(row).forEach(key => {
-                    const newVal = parseFloat(row[key]);
-                    const oldVal = parseFloat(originalRow[key]);
-                    if (!isNaN(newVal) && !isNaN(oldVal)) {
-                        totalDelta += (newVal - oldVal);
-                    }
-                });
-
-                const intensityClass = getValueIntensityClass(totalDelta);
-                const deltaPrefix = totalDelta > 0 ? '+' : '';
-                html += `<td class="numeric ${intensityClass}">${deltaPrefix}${totalDelta.toFixed(2)}</td>`;
-            } else {
-                const val = row[h];
-                const isNumeric = !isNaN(parseFloat(val)) && isFinite(val);
-                const intensityClass = isNumeric ? getValueIntensityClass(val) : '';
-                html += `<td class="${isNumeric ? 'numeric' : ''} ${intensityClass}">${val}</td>`;
-
-                if (isNumeric) {
-                    columnSums[h] = (columnSums[h] || 0) + parseFloat(val);
-                }
+        columns.forEach(col => {
+            const val = row[col];
+            const isNumeric = col !== 'Pair';
+            const numVal = parseFloat(val) || 0;
+            
+            let displayVal = val;
+            let intensityClass = '';
+            
+            if (isNumeric) {
+                intensityClass = getValueIntensityClass(numVal);
+                displayVal = numVal.toFixed(2);
+                columnSums[col] += numVal;
             }
+
+            html += `<td class="${isNumeric ? 'numeric' : ''} ${intensityClass}">${displayVal}</td>`;
         });
         html += '</tr>';
     });
 
     tbody.innerHTML = html;
 
-    // Render Sum Row
+    // 3. Render Sum Row
     let footHtml = '<tr>';
-    headers.forEach(h => {
-        if (h === 'Change') {
-            footHtml += '<td class="val-zero">-</td>'; 
-        } else if (columnSums[h] !== undefined) {
-            const intensityClass = getValueIntensityClass(columnSums[h]);
-            footHtml += `<td class="numeric ${intensityClass}">${columnSums[h].toFixed(2)}</td>`;
-        } else {
+    columns.forEach(col => {
+        if (col === 'Pair') {
             footHtml += '<td class="val-zero">TOTAL</td>';
+        } else {
+            const sum = columnSums[col];
+            const intensityClass = getValueIntensityClass(sum);
+            footHtml += `<td class="numeric ${intensityClass}">${sum.toFixed(2)}</td>`;
         }
     });
     footHtml += '</tr>';
