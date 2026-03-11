@@ -21,52 +21,66 @@ const INDICATORS = ["SMA", "RSI", "BOLL", "CCI", "MACD", "ROC"];
 let assetData = [];
 
 async function init() {
-    // 1. Initial placeholder state
+    // 1. Start with blank state
     assetData = CURRENCY_PAIRS.map(pair => ({
         pair,
         price: "0.00000",
         compositeScore: 0,
         inputs: { SMA: 0, RSI: 0, BOLL: 0, CCI: 0, MACD: 0, ROC: 0 }
     }));
-
     renderAssets();
+
+    // 2. Hydrate from LocalStorage (fastest)
+    const cached = localStorage.getItem('heatsignal_data');
+    if (cached) {
+        try {
+            assetData = JSON.parse(cached);
+            renderAssets();
+            updateGlobalSentiment();
+        } catch (e) { }
+    }
+
     setupEventListeners();
 
-    // 2. Fetch latest persistent data from GitHub raw (to bypass build caching)
-    await fetchLatestFromGitHub();
+    // 3. Sync from the LIVE API (most accurate)
+    await syncData();
 
-    // 3. Poll for updates every 60 seconds
-    setInterval(fetchLatestFromGitHub, 60000);
+    // 4. Poll every 60s
+    setInterval(syncData, 60000);
 }
 
-async function fetchLatestFromGitHub() {
+async function syncData() {
     try {
-        // We use a timestamp to avoid browser caching of the static file
-        const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/main/${CONFIG.dataPath}?t=${Date.now()}`;
-        const response = await fetch(url);
+        // Try to hit the API directly (Vercel warm start memory)
+        let response = await fetch('/api/update-analysis');
+
+        // If API fails or is empty, try the GitHub Raw file as ultimate fallback
+        if (!response.ok) {
+            const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/main/${CONFIG.dataPath}?t=${Date.now()}`;
+            response = await fetch(url);
+        }
 
         if (response.ok) {
             const result = await response.json();
             if (result.success && result.data) {
-                assetData = result.data.map(item => ({
-                    pair: item.pair,
-                    price: item.price || "0.00000",
-                    compositeScore: parseFloat(item.compositeScore) || 0,
-                    inputs: item.inputs || {}
-                }));
+                assetData = result.data;
+                localStorage.setItem('heatsignal_data', JSON.stringify(assetData));
                 renderAssets();
                 updateGlobalSentiment();
-                console.log('Successfully synced with latest GitHub-backed analysis.');
+                console.log('✅ Sync Complete:', result.assetCount, 'pairs updated.');
+                return;
             }
         }
+        console.warn('Sync attempt returned no data.');
     } catch (err) {
-        console.warn('Persistence sync not yet available or failed:', err.message);
+        console.error('❌ Sync Failed:', err.message);
     }
 }
 
 function updateGlobalSentiment() {
     if (assetData.length === 0) return;
-    const avg = assetData.reduce((acc, curr) => acc + curr.compositeScore, 0) / assetData.length;
+    const scores = assetData.map(a => parseFloat(a.compositeScore) || 0);
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
     const el = document.querySelector('.sentiment-value');
     if (el) {
         el.textContent = (avg > 0 ? '+' : '') + avg.toFixed(1);
@@ -79,13 +93,11 @@ function renderAssets() {
     const sortVal = document.getElementById('sort-control').value;
     const searchVal = document.getElementById('asset-search').value.toLowerCase();
 
-    // Sort data
     let sortedData = [...assetData];
     if (sortVal === 'score-desc') sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
     else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.compositeScore - b.compositeScore);
     else if (sortVal === 'name') sortedData.sort((a, b) => a.pair.localeCompare(b.pair));
 
-    // Filter data
     if (searchVal) {
         sortedData = sortedData.filter(item => item.pair.toLowerCase().includes(searchVal));
     }
@@ -94,10 +106,9 @@ function renderAssets() {
 
     sortedData.forEach((asset, index) => {
         const card = document.createElement('div');
-        let colorClass = 'card-neutral';
-        const score = asset.compositeScore;
+        const score = parseFloat(asset.compositeScore) || 0;
 
-        // Intensity logic
+        let colorClass = 'card-neutral';
         if (score >= 7) colorClass = 'card-high-pos';
         else if (score >= 3) colorClass = 'card-mid-pos';
         else if (score <= -7) colorClass = 'card-high-neg';
@@ -120,7 +131,7 @@ function renderAssets() {
 function showDetail(asset) {
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('modal-body');
-    const score = asset.compositeScore;
+    const score = parseFloat(asset.compositeScore) || 0;
     const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
     const gaugePercent = ((score + 10) / 20) * 100;
     const sentiment = score >= 0 ? "Positive" : "Negative";
@@ -143,7 +154,7 @@ function showDetail(asset) {
         <h3 class="technical-indicators-title">Technical Indicators</h3>
         <div class="indicator-grid-detail">
             ${INDICATORS.map(ind => {
-        const val = asset.inputs[ind] || 0;
+        const val = asset.inputs ? (asset.inputs[ind] || 0) : 0;
         let indClass = 'ind-neutral';
         if (parseFloat(val) >= 3) indClass = 'ind-green';
         else if (parseFloat(val) <= -3) indClass = 'ind-red';
