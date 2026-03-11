@@ -6,7 +6,7 @@
   "data": [
     {
       "pair": "AUD/NZD",
-      "price": 1.20892,
+      "price": 1.20894,
       "compositeScore": -4.628,
       "inputs": {
         "SMA": 10,
@@ -19,7 +19,7 @@
     },
     {
       "pair": "EUR/AUD",
-      "price": 1.61868,
+      "price": 1.61867,
       "compositeScore": 4.436,
       "inputs": {
         "SMA": -10,
@@ -32,7 +32,7 @@
     },
     {
       "pair": "GBP/AUD",
-      "price": 1.87665,
+      "price": 1.87672,
       "compositeScore": 4.128,
       "inputs": {
         "SMA": -10,
@@ -45,14 +45,14 @@
     },
     {
       "pair": "AUD/CHF",
-      "price": 0.55747,
+      "price": 0.55743,
       "compositeScore": -3.672,
       "inputs": {
         "SMA": 9.7,
         "RSI": -6.4,
         "BOLL": -9.9,
         "CCI": -10,
-        "MACD": 5.5,
+        "MACD": 5.4,
         "ROC": -6.4
       }
     },
@@ -71,7 +71,7 @@
     },
     {
       "pair": "AUD/JPY",
-      "price": 113.61048,
+      "price": 113.60679,
       "compositeScore": -4.172,
       "inputs": {
         "SMA": 10,
@@ -84,7 +84,7 @@
     },
     {
       "pair": "AUD/NOK",
-      "price": 6.89899,
+      "price": 6.90116,
       "compositeScore": -4.384,
       "inputs": {
         "SMA": 8.2,
@@ -110,15 +110,15 @@
     },
     {
       "pair": "AUD/SGD",
-      "price": 0.91089,
-      "compositeScore": -4.004,
+      "price": 0.91087,
+      "compositeScore": -3.96,
       "inputs": {
         "SMA": 9.6,
-        "RSI": -7.1,
+        "RSI": -7,
         "BOLL": -9.9,
         "CCI": -10,
         "MACD": 2.9,
-        "ROC": -7.1
+        "ROC": -7
       }
     },
     {
@@ -149,7 +149,7 @@
     },
     {
       "pair": "GBP/JPY",
-      "price": 213.20202,
+      "price": 213.20854,
       "compositeScore": -4.84,
       "inputs": {
         "SMA": 2.6,
@@ -175,20 +175,20 @@
     },
     {
       "pair": "EUR/GBP",
-      "price": 0.86255,
-      "compositeScore": 3.84,
+      "price": 0.8625,
+      "compositeScore": 3.876,
       "inputs": {
         "SMA": -4.7,
         "RSI": 7.1,
         "BOLL": 9.6,
-        "CCI": 4.8,
+        "CCI": 4.9,
         "MACD": -7.4,
         "ROC": 7.1
       }
     },
     {
       "pair": "EUR/NZD",
-      "price": 1.95681,
+      "price": 1.95689,
       "compositeScore": 3.836,
       "inputs": {
         "SMA": -5.7,
@@ -214,15 +214,15 @@
     },
     {
       "pair": "GBP/DKK",
-      "price": 8.66278,
-      "compositeScore": -3.504,
+      "price": 8.66305,
+      "compositeScore": -3.528,
       "inputs": {
         "SMA": 5.1,
-        "RSI": -7,
+        "RSI": -7.1,
         "BOLL": -9.6,
         "CCI": -4.2,
         "MACD": 7.3,
-        "ROC": -7
+        "ROC": -7.1
       }
     },
     {
@@ -266,7 +266,7 @@
     },
     {
       "pair": "USD/JPY",
-      "price": 158.91088,
+      "price": 158.90635,
       "compositeScore": -1.748,
       "inputs": {
         "SMA": 9.9,
@@ -292,7 +292,7 @@
     },
     {
       "pair": "AUD/USD",
-      "price": 0.71494,
+      "price": 0.71493,
       "compositeScore": -2.984,
       "inputs": {
         "SMA": 7.2,
@@ -305,7 +305,7 @@
     },
     {
       "pair": "CAD/JPY",
-      "price": 116.92826,
+      "price": 116.92328,
       "compositeScore": -2.164,
       "inputs": {
         "SMA": 10,
@@ -356,34 +356,8 @@
       }
     },
     {
-      "pair": "EUR/CAD",
-      "price": 1.5727,
-      "compositeScore": -2.08,
-      "inputs": {
-        "SMA": -10,
-        "RSI": 8.7,
-        "BOLL": 9,
-        "CCI": -9.8,
-        "MACD": -8.2,
-        "ROC": 8.7
-      }
-    },
-    {
-      "pair": "CAD/DKK",
-      "price": 4.75196,
-      "compositeScore": 2.036,
-      "inputs": {
-        "SMA": 10,
-        "RSI": -8.8,
-        "BOLL": -9,
-        "CCI": 9.8,
-        "MACD": 8.1,
-        "ROC": -8.8
-      }
-    },
-    {
       "pair": "CHF/JPY",
-      "price": 203.79528,
+      "price": 203.80975,
       "compositeScore": -0.996,
       "inputs": {
         "SMA": 9.3,
@@ -392,6 +366,32 @@
         "CCI": -1.1,
         "MACD": 3.1,
         "ROC": -5.8
+      }
+    },
+    {
+      "pair": "EUR/CAD",
+      "price": 1.57281,
+      "compositeScore": -2.096,
+      "inputs": {
+        "SMA": -10,
+        "RSI": 8.7,
+        "BOLL": 8.9,
+        "CCI": -9.8,
+        "MACD": -8.2,
+        "ROC": 8.7
+      }
+    },
+    {
+      "pair": "CAD/DKK",
+      "price": 4.7512,
+      "compositeScore": 2.036,
+      "inputs": {
+        "SMA": 10,
+        "RSI": -8.8,
+        "BOLL": -8.9,
+        "CCI": 9.7,
+        "MACD": 8.1,
+        "ROC": -8.8
       }
     },
     {
@@ -405,19 +405,6 @@
         "CCI": -2.2,
         "MACD": 3.9,
         "ROC": -4.5
-      }
-    },
-    {
-      "pair": "CAD/SEK",
-      "price": 6.79017,
-      "compositeScore": 2.156,
-      "inputs": {
-        "SMA": 10,
-        "RSI": -7.1,
-        "BOLL": -8.9,
-        "CCI": 8.9,
-        "MACD": 7.3,
-        "ROC": -7.1
       }
     },
     {
@@ -435,15 +422,28 @@
     },
     {
       "pair": "NZD/SGD",
-      "price": 0.75344,
-      "compositeScore": -1.5,
+      "price": 0.75347,
+      "compositeScore": -1.48,
       "inputs": {
         "SMA": -8.5,
         "RSI": 3.3,
         "BOLL": 8.8,
         "CCI": -8,
-        "MACD": -1.9,
+        "MACD": -1.8,
         "ROC": 3.3
+      }
+    },
+    {
+      "pair": "CAD/SEK",
+      "price": 6.78858,
+      "compositeScore": 2.156,
+      "inputs": {
+        "SMA": 10,
+        "RSI": -7.1,
+        "BOLL": -8.8,
+        "CCI": 8.8,
+        "MACD": 7.3,
+        "ROC": -7.1
       }
     },
     {
@@ -461,46 +461,20 @@
     },
     {
       "pair": "EUR/CHF",
-      "price": 0.90236,
-      "compositeScore": -1.504,
+      "price": 0.90229,
+      "compositeScore": 0.456,
       "inputs": {
         "SMA": -9.5,
         "RSI": 5.6,
         "BOLL": 8.7,
-        "CCI": -10,
+        "CCI": 0,
         "MACD": -1.8,
         "ROC": 5.6
       }
     },
     {
-      "pair": "CAD/CHF",
-      "price": 0.57377,
-      "compositeScore": 2.268,
-      "inputs": {
-        "SMA": 9.2,
-        "RSI": -6.4,
-        "BOLL": -8.7,
-        "CCI": 9.3,
-        "MACD": 7.5,
-        "ROC": -6.4
-      }
-    },
-    {
-      "pair": "CHF/DKK",
-      "price": 8.28187,
-      "compositeScore": 1.404,
-      "inputs": {
-        "SMA": 9.6,
-        "RSI": -5.9,
-        "BOLL": -8.7,
-        "CCI": 9.8,
-        "MACD": 1.7,
-        "ROC": -5.9
-      }
-    },
-    {
       "pair": "USD/HKD",
-      "price": 7.82573,
+      "price": 7.8257,
       "compositeScore": -2.976,
       "inputs": {
         "SMA": 1.5,
@@ -525,6 +499,32 @@
       }
     },
     {
+      "pair": "CAD/CHF",
+      "price": 0.57368,
+      "compositeScore": 2.284,
+      "inputs": {
+        "SMA": 9.2,
+        "RSI": -6.4,
+        "BOLL": -8.6,
+        "CCI": 9.3,
+        "MACD": 7.5,
+        "ROC": -6.4
+      }
+    },
+    {
+      "pair": "CHF/DKK",
+      "price": 8.28096,
+      "compositeScore": 1.404,
+      "inputs": {
+        "SMA": 9.6,
+        "RSI": -5.9,
+        "BOLL": -8.6,
+        "CCI": 9.7,
+        "MACD": 1.7,
+        "ROC": -5.9
+      }
+    },
+    {
       "pair": "DKK/HKD",
       "price": 1.21208,
       "compositeScore": -1.972,
@@ -539,20 +539,20 @@
     },
     {
       "pair": "USD/CAD",
-      "price": 1.35904,
-      "compositeScore": 1.768,
+      "price": 1.35909,
+      "compositeScore": 1.708,
       "inputs": {
         "SMA": -4.2,
-        "RSI": 3.8,
+        "RSI": 3.7,
         "BOLL": 8.5,
-        "CCI": 1.4,
+        "CCI": 1.3,
         "MACD": -3.7,
-        "ROC": 3.8
+        "ROC": 3.7
       }
     },
     {
       "pair": "USD/NOK",
-      "price": 9.65269,
+      "price": 9.65254,
       "compositeScore": 0.396,
       "inputs": {
         "SMA": 2.3,
@@ -565,20 +565,20 @@
     },
     {
       "pair": "CHF/SEK",
-      "price": 11.83359,
-      "compositeScore": 0.94,
+      "price": 11.8316,
+      "compositeScore": 0.928,
       "inputs": {
         "SMA": 9.9,
-        "RSI": -4.8,
+        "RSI": -4.7,
         "BOLL": -8.4,
-        "CCI": 7,
-        "MACD": -0.3,
-        "ROC": -4.8
+        "CCI": 6.9,
+        "MACD": -0.4,
+        "ROC": -4.7
       }
     },
     {
       "pair": "USD/SEK",
-      "price": 9.22557,
+      "price": 9.22502,
       "compositeScore": 2.044,
       "inputs": {
         "SMA": 10,
@@ -590,34 +590,34 @@
       }
     },
     {
-      "pair": "CAD/NZD",
-      "price": 1.24453,
-      "compositeScore": 2.388,
-      "inputs": {
-        "SMA": 9.9,
-        "RSI": -5.3,
-        "BOLL": -8,
-        "CCI": 7.4,
-        "MACD": 6.9,
-        "ROC": -5.3
-      }
-    },
-    {
       "pair": "GBP/NZD",
-      "price": 2.26866,
-      "compositeScore": -1.08,
+      "price": 2.26886,
+      "compositeScore": -1.096,
       "inputs": {
         "SMA": -1.4,
         "RSI": -1.6,
-        "BOLL": -8,
+        "BOLL": -8.1,
         "CCI": 7.5,
-        "MACD": 5.6,
+        "MACD": 5.7,
         "ROC": -1.6
       }
     },
     {
+      "pair": "CAD/NZD",
+      "price": 1.24426,
+      "compositeScore": 2.412,
+      "inputs": {
+        "SMA": 9.9,
+        "RSI": -5.2,
+        "BOLL": -7.9,
+        "CCI": 7.3,
+        "MACD": 6.9,
+        "ROC": -5.2
+      }
+    },
+    {
       "pair": "GBP/MXN",
-      "price": 23.72553,
+      "price": 23.72272,
       "compositeScore": 2.36,
       "inputs": {
         "SMA": 8.3,
@@ -630,15 +630,15 @@
     },
     {
       "pair": "CAD/MXN",
-      "price": 13.01521,
-      "compositeScore": 2.352,
+      "price": 13.01102,
+      "compositeScore": 2.376,
       "inputs": {
         "SMA": 10,
-        "RSI": -5.5,
+        "RSI": -5.4,
         "BOLL": -7.8,
         "CCI": 7,
         "MACD": 9.3,
-        "ROC": -5.5
+        "ROC": -5.4
       }
     },
     {
@@ -652,19 +652,6 @@
         "CCI": -7.9,
         "MACD": 2.8,
         "ROC": 4.7
-      }
-    },
-    {
-      "pair": "NOK/SEK",
-      "price": 0.95615,
-      "compositeScore": -0.436,
-      "inputs": {
-        "SMA": 10,
-        "RSI": -6.1,
-        "BOLL": -7.7,
-        "CCI": 4.5,
-        "MACD": -4.3,
-        "ROC": -6.1
       }
     },
     {
@@ -682,33 +669,46 @@
     },
     {
       "pair": "AUD/CAD",
-      "price": 0.97162,
-      "compositeScore": -0.672,
+      "price": 0.97166,
+      "compositeScore": -0.656,
       "inputs": {
         "SMA": 4.3,
         "RSI": -4.6,
         "BOLL": -7.4,
-        "CCI": 7.9,
+        "CCI": 8,
         "MACD": -3.4,
         "ROC": -4.6
       }
     },
     {
-      "pair": "USD/CHF",
-      "price": 0.77976,
-      "compositeScore": 2.252,
+      "pair": "NOK/SEK",
+      "price": 0.95577,
+      "compositeScore": -0.396,
       "inputs": {
-        "SMA": 8.1,
-        "RSI": -2.6,
+        "SMA": 10,
+        "RSI": -5.9,
+        "BOLL": -7.3,
+        "CCI": 4.3,
+        "MACD": -4.5,
+        "ROC": -5.9
+      }
+    },
+    {
+      "pair": "USD/CHF",
+      "price": 0.77968,
+      "compositeScore": 2.232,
+      "inputs": {
+        "SMA": 8,
+        "RSI": -2.5,
         "BOLL": -7.3,
         "CCI": 6.5,
-        "MACD": 5.3,
-        "ROC": -2.6
+        "MACD": 5.2,
+        "ROC": -2.5
       }
     },
     {
       "pair": "USD/MXN",
-      "price": 17.68183,
+      "price": 17.68187,
       "compositeScore": 2.204,
       "inputs": {
         "SMA": 10,
@@ -720,39 +720,52 @@
       }
     },
     {
+      "pair": "CHF/NOK",
+      "price": 12.37952,
+      "compositeScore": -1.732,
+      "inputs": {
+        "SMA": -7,
+        "RSI": -0.3,
+        "BOLL": -7.2,
+        "CCI": 7.7,
+        "MACD": 4.3,
+        "ROC": -0.3
+      }
+    },
+    {
       "pair": "GBP/CAD",
-      "price": 1.82335,
-      "compositeScore": -1.304,
+      "price": 1.82354,
+      "compositeScore": -1.344,
       "inputs": {
         "SMA": -9.9,
-        "RSI": 6,
-        "BOLL": 7.2,
+        "RSI": 5.9,
+        "BOLL": 7.1,
         "CCI": -7,
         "MACD": -2,
-        "ROC": 6
+        "ROC": 5.9
       }
     },
     {
       "pair": "CAD/SGD",
-      "price": 0.93766,
-      "compositeScore": 1.896,
+      "price": 0.9375,
+      "compositeScore": 1.9,
       "inputs": {
         "SMA": 9.1,
-        "RSI": -5.7,
-        "BOLL": -7.2,
-        "CCI": 6.7,
-        "MACD": 5.8,
-        "ROC": -5.7
+        "RSI": -5.6,
+        "BOLL": -7.1,
+        "CCI": 6.6,
+        "MACD": 5.7,
+        "ROC": -5.6
       }
     },
     {
       "pair": "GBP/CHF",
-      "price": 1.04617,
-      "compositeScore": -2.564,
+      "price": 1.04613,
+      "compositeScore": -2.548,
       "inputs": {
         "SMA": -8.8,
         "RSI": -0.7,
-        "BOLL": -7.2,
+        "BOLL": -7.1,
         "CCI": 6.3,
         "MACD": 6.5,
         "ROC": -0.7
@@ -785,28 +798,15 @@
       }
     },
     {
-      "pair": "CHF/NOK",
-      "price": 12.3766,
-      "compositeScore": -1.672,
-      "inputs": {
-        "SMA": -7,
-        "RSI": -0.2,
-        "BOLL": -6.8,
-        "CCI": 7.4,
-        "MACD": 4.2,
-        "ROC": -0.2
-      }
-    },
-    {
       "pair": "CHF/SGD",
-      "price": 1.63414,
+      "price": 1.63395,
       "compositeScore": 0.612,
       "inputs": {
         "SMA": -0.5,
         "RSI": 2.2,
-        "BOLL": 6.7,
-        "CCI": -4.8,
-        "MACD": -3,
+        "BOLL": 6.8,
+        "CCI": -4.9,
+        "MACD": -3.1,
         "ROC": 2.2
       }
     },
@@ -864,7 +864,7 @@
     },
     {
       "pair": "EUR/JPY",
-      "price": 183.89472,
+      "price": 183.89373,
       "compositeScore": -1.736,
       "inputs": {
         "SMA": -2.4,
@@ -916,15 +916,15 @@
     },
     {
       "pair": "USD/SGD",
-      "price": 1.27407,
-      "compositeScore": 1.656,
+      "price": 1.27401,
+      "compositeScore": 1.696,
       "inputs": {
         "SMA": 7.9,
-        "RSI": -1.5,
-        "BOLL": -4.2,
+        "RSI": -1.4,
+        "BOLL": -4.1,
         "CCI": 2.2,
         "MACD": 2.6,
-        "ROC": -1.5
+        "ROC": -1.4
       }
     },
     {
@@ -994,7 +994,7 @@
     },
     {
       "pair": "GBP/HKD",
-      "price": 10.49952,
+      "price": 10.49911,
       "compositeScore": -1.288,
       "inputs": {
         "SMA": -9.8,
@@ -1072,7 +1072,7 @@
     },
     {
       "pair": "XAU/USD",
-      "price": 5178.13331,
+      "price": 5177.94026,
       "compositeScore": 2.164,
       "inputs": {
         "SMA": 10,
@@ -1097,5 +1097,5 @@
       }
     }
   ],
-  "timestamp": "2026-03-11T18:33:28.243Z"
+  "timestamp": "2026-03-11T18:33:55.605Z"
 }
