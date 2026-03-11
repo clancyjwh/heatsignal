@@ -51,30 +51,28 @@
 
         <!-- Main Content -->
         <main class="content">
-            <header class="top-bar">
+            <header class="dashboard-header">
+                <h1 class="page-title">Market Analysis</h1>
+
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="asset-search" placeholder="Search 105 FX pairs...">
                 </div>
-                <div class="market-overview">
-                    <div class="global-sentiment">
-                        Global Sentiment: <span class="sentiment-value positive">+2.4</span>
-                    </div>
+
+                <div class="header-controls">
+                    <select id="sort-control">
+                        <option value="score-desc">Highest Score</option>
+                        <option value="score-asc">Lowest Score</option>
+                        <option value="name">Alphabetical</option>
+                    </select>
+                </div>
+
+                <div class="global-sentiment">
+                    Sentiment: <span class="sentiment-value positive">+2.4</span>
                 </div>
             </header>
 
             <section class="dashboard-section" id="analysis-section">
-                <div class="section-header">
-                    <h1>Market Analysis</h1>
-                    <div class="controls">
-                        <select id="sort-control">
-                            <option value="score-desc">Highest Score</option>
-                            <option value="score-asc">Lowest Score</option>
-                            <option value="name">Alphabetical</option>
-                        </select>
-                    </div>
-                </div>
-
                 <div class="asset-grid" id="asset-grid">
                     <!-- Assets will be injected here by JS -->
                     <div class="loading">Loading 105 FX pairs...</div>

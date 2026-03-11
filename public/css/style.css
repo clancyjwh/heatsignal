@@ -102,22 +102,32 @@ body {
     padding: 1.5rem;
 }
 
-.top-bar {
+/* Dashboard Header - Condensed */
+.dashboard-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .search-container {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    width: 300px;
+    flex: 1;
+    max-width: 300px;
 }
 
 .search-container input {
@@ -129,7 +139,27 @@ body {
     font-size: 0.85rem;
 }
 
-/* Asset Grid - Compressed for 7 columns */
+.header-controls select {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    outline: none;
+    font-size: 0.85rem;
+}
+
+.global-sentiment {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.sentiment-value.positive {
+    color: var(--accent-green);
+    font-weight: 700;
+}
+
 .asset-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
