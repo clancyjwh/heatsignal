@@ -1,3 +1,10 @@
+// Configuration - Replace with your Supabase details or set via environment variables if using a build step
+// For this static version, we can use a small helper or just fetch directly
+const SUPABASE_CONFIG = {
+    url: '', // User to fill
+    anonKey: '' // User to fill
+};
+
 const CURRENCY_PAIRS = [
     "AUD/CAD", "AUD/CHF", "AUD/DKK", "AUD/HKD", "AUD/JPY", "AUD/MXN", "AUD/NOK", "AUD/NZD", "AUD/SEK", "AUD/SGD", "AUD/USD",
     "CAD/CHF", "CAD/DKK", "CAD/HKD", "CAD/JPY", "CAD/MXN", "CAD/NOK", "CAD/NZD", "CAD/SEK", "CAD/SGD",
@@ -11,12 +18,10 @@ const CURRENCY_PAIRS = [
 ];
 
 const INDICATORS = ["CCI", "RSI", "SMA", "BOLL", "MACD", "ROC"];
-
 let assetData = [];
 
-function init() {
-    // Stop randomizing values on every refresh.
-    // Initialize with 0s. 
+async function init() {
+    // 1. Set default state while loading
     assetData = CURRENCY_PAIRS.map(pair => ({
         pair,
         price: (0).toFixed(5),
@@ -26,6 +31,38 @@ function init() {
 
     renderAssets();
     setupEventListeners();
+
+    // 2. Try to fetch real persistent data if Supabase is configured
+    if (SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey) {
+        await fetchLatestData();
+    }
+}
+
+async function fetchLatestData() {
+    try {
+        const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/analysis?select=*`, {
+            headers: {
+                'apikey': SUPABASE_CONFIG.anonKey,
+                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+                // Map DB schema to app state
+                assetData = data.map(item => ({
+                    pair: item.pair,
+                    price: item.price.toFixed(5),
+                    compositeScore: item.composite_score,
+                    inputs: item.indicators
+                }));
+                renderAssets();
+            }
+        }
+    } catch (err) {
+        console.error('Failed to fetch from Supabase:', err);
+    }
 }
 
 function renderAssets() {
