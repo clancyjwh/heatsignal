@@ -1,3 +1,10 @@
+// Configuration
+const CONFIG = {
+    repo: 'heatsignal',
+    owner: 'clancyjwh',
+    dataPath: 'public/data/latest_analysis.json'
+};
+
 const CURRENCY_PAIRS = [
     "AUD/CAD", "AUD/CHF", "AUD/DKK", "AUD/HKD", "AUD/JPY", "AUD/MXN", "AUD/NOK", "AUD/NZD", "AUD/SEK", "AUD/SGD", "AUD/USD",
     "CAD/CHF", "CAD/DKK", "CAD/HKD", "CAD/JPY", "CAD/MXN", "CAD/NOK", "CAD/NZD", "CAD/SEK", "CAD/SGD",
@@ -10,49 +17,60 @@ const CURRENCY_PAIRS = [
     "XAU/AUD", "XAU/CAD", "XAU/CHF", "XAU/DKK", "XAU/EUR", "XAU/GBP", "XAU/HKD", "XAU/JPY", "XAU/MXN", "XAU/NOK", "XAU/NZD", "XAU/SEK", "XAU/SGD", "XAU/USD"
 ];
 
-const INDICATORS = ["CCI", "RSI", "SMA", "BOLL", "MACD", "ROC"];
+const INDICATORS = ["SMA", "RSI", "BOLL", "CCI", "MACD", "ROC"];
 let assetData = [];
 
 async function init() {
-    // 1. Check if we have data in localStorage from a previous push
-    const cached = localStorage.getItem('heatsignal_latest_cache');
-    if (cached) {
-        assetData = JSON.parse(cached);
-        renderAssets();
-    } else {
-        // Initial blank state
-        assetData = CURRENCY_PAIRS.map(pair => ({
-            pair,
-            price: "0.00000",
-            compositeScore: 0,
-            inputs: { CCI: 0, RSI: 0, SMA: 0, BOLL: 0, MACD: 0, ROC: 0 }
-        }));
-        renderAssets();
-    }
+    // 1. Initial placeholder state
+    assetData = CURRENCY_PAIRS.map(pair => ({
+        pair,
+        price: "0.00000",
+        compositeScore: 0,
+        inputs: { SMA: 0, RSI: 0, BOLL: 0, CCI: 0, MACD: 0, ROC: 0 }
+    }));
 
+    renderAssets();
     setupEventListeners();
 
-    // 2. Initial fetch from API (in case a webhook came in while offline)
-    await fetchLatestData();
+    // 2. Fetch latest persistent data from GitHub raw (to bypass build caching)
+    await fetchLatestFromGitHub();
 
-    // 3. Poll for updates every 30 seconds (Simple "Stay the same" logic)
-    setInterval(fetchLatestData, 30000);
+    // 3. Poll for updates every 60 seconds
+    setInterval(fetchLatestFromGitHub, 60000);
 }
 
-async function fetchLatestData() {
+async function fetchLatestFromGitHub() {
     try {
-        const response = await fetch('/api/update-analysis');
-        const result = await response.json();
+        // We use a timestamp to avoid browser caching of the static file
+        const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/main/${CONFIG.dataPath}?t=${Date.now()}`;
+        const response = await fetch(url);
 
-        if (result.success && result.data) {
-            assetData = result.data;
-            // Persist locally for immediate load on next refresh
-            localStorage.setItem('heatsignal_latest_cache', JSON.stringify(assetData));
-            renderAssets();
-            console.log('Dashboard updated with latest webhook data.');
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+                assetData = result.data.map(item => ({
+                    pair: item.pair,
+                    price: item.price || "0.00000",
+                    compositeScore: parseFloat(item.compositeScore) || 0,
+                    inputs: item.inputs || {}
+                }));
+                renderAssets();
+                updateGlobalSentiment();
+                console.log('Successfully synced with latest GitHub-backed analysis.');
+            }
         }
     } catch (err) {
-        console.error('Could not sync with latest analysis:', err);
+        console.warn('Persistence sync not yet available or failed:', err.message);
+    }
+}
+
+function updateGlobalSentiment() {
+    if (assetData.length === 0) return;
+    const avg = assetData.reduce((acc, curr) => acc + curr.compositeScore, 0) / assetData.length;
+    const el = document.querySelector('.sentiment-value');
+    if (el) {
+        el.textContent = (avg > 0 ? '+' : '') + avg.toFixed(1);
+        el.className = `sentiment-value ${avg >= 0 ? 'positive' : 'negative'}`;
     }
 }
 
@@ -61,11 +79,13 @@ function renderAssets() {
     const sortVal = document.getElementById('sort-control').value;
     const searchVal = document.getElementById('asset-search').value.toLowerCase();
 
+    // Sort data
     let sortedData = [...assetData];
     if (sortVal === 'score-desc') sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
     else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.compositeScore - b.compositeScore);
     else if (sortVal === 'name') sortedData.sort((a, b) => a.pair.localeCompare(b.pair));
 
+    // Filter data
     if (searchVal) {
         sortedData = sortedData.filter(item => item.pair.toLowerCase().includes(searchVal));
     }
@@ -76,6 +96,8 @@ function renderAssets() {
         const card = document.createElement('div');
         let colorClass = 'card-neutral';
         const score = asset.compositeScore;
+
+        // Intensity logic
         if (score >= 7) colorClass = 'card-high-pos';
         else if (score >= 3) colorClass = 'card-mid-pos';
         else if (score <= -7) colorClass = 'card-high-neg';
@@ -123,12 +145,12 @@ function showDetail(asset) {
             ${INDICATORS.map(ind => {
         const val = asset.inputs[ind] || 0;
         let indClass = 'ind-neutral';
-        if (val >= 3) indClass = 'ind-green';
-        else if (val <= -3) indClass = 'ind-red';
+        if (parseFloat(val) >= 3) indClass = 'ind-green';
+        else if (parseFloat(val) <= -3) indClass = 'ind-red';
         return `
                     <div class="indicator-card ${indClass}">
                         <span class="ind-label-detail">${ind}</span>
-                        <div class="ind-value-detail">${val >= 0 ? '+' : ''}${val}</div>
+                        <div class="ind-value-detail">${parseFloat(val) >= 0 ? '+' : ''}${parseFloat(val).toFixed(1)}</div>
                     </div>
                 `;
     }).join('')}

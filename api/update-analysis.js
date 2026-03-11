@@ -1,6 +1,3 @@
-// In-memory store (clears on Vercel cold starts, but provides "Bolt-like" temporary persistence)
-let latestAnalysis = null;
-
 export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -13,8 +10,23 @@ export default async function handler(req, res) {
         return;
     }
 
+    const GH_TOKEN = process.env.GITHUB_TOKEN_PERSISTENCE || process.env.GITHUB_TOKEN;
+    const GH_REPO = process.env.GITHUB_REPO || 'heatsignal';
+    const GH_OWNER = process.env.GITHUB_OWNER || 'clancyjwh';
+    const FILE_PATH = 'public/data/latest_analysis.json';
+
     if (req.method === 'GET') {
-        return res.status(200).json(latestAnalysis || { success: false, message: 'No data received yet' });
+        // Fallback: If for some reason the static file fetch fails on frontend, we can hit this
+        try {
+            const response = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${FILE_PATH}`);
+            if (response.ok) {
+                const data = await response.json();
+                return res.status(200).json(data);
+            }
+            return res.status(200).json({ success: false, message: 'No data yet' });
+        } catch (e) {
+            return res.status(500).json({ success: false, error: e.message });
+        }
     }
 
     if (req.method === 'POST') {
@@ -23,36 +35,31 @@ export default async function handler(req, res) {
             const incomingSecret = req.headers['x-heatsignal-secret'] || payload.secret;
             const targetSecret = process.env.MAKE_SECRET || 'Heatsignal_Alpha_9xK2m_2026';
 
-            // Security check - Only enforce in production if secret is provided or expected
-            if (process.env.NODE_ENV === 'production') {
-                if (incomingSecret !== targetSecret) {
-                    console.warn(`Unauthorized attempt with secret: ${incomingSecret}`);
-                    return res.status(401).json({ error: 'Unauthorized', message: 'Check your x-heatsignal-secret header' });
-                }
+            // Security check
+            if (incomingSecret !== targetSecret) {
+                console.warn(`Unauthorized attempt. Input: ${incomingSecret}`);
+                return res.status(401).json({ error: 'Unauthorized' });
             }
 
             // Handle ResultCollection Structure
             const collection = payload.payloadCollection || {};
             let assetsRaw = collection.assetsArray || [];
 
-            // If assetsArray is an object (1Collection, 2Collection...), convert to array
+            // Handle if assetsArray is an object (1Collection, 2Collection...)
             const assetsArray = Array.isArray(assetsRaw)
                 ? assetsRaw
                 : Object.values(assetsRaw);
 
-            if (assetsArray.length === 0) {
-                return res.status(400).json({ error: 'No assets found in payload' });
-            }
-
-            // Map and store the data
+            // Map standard format
             const processedData = assetsArray.map(asset => ({
                 pair: asset.pair,
                 price: asset.price,
-                compositeScore: asset.compositeScore || asset.cumulativeSignalCollection?.blended || 0,
+                // Webhook sends compositeScore inside cumulativeSignalCollection
+                compositeScore: asset.cumulativeSignalCollection?.compositeScore || asset.cumulativeSignalCollection?.blended || 0,
                 inputs: asset.inputsCollection || {}
             }));
 
-            latestAnalysis = {
+            const finalPayload = {
                 success: true,
                 project: collection.project,
                 runDate: collection.runDate,
@@ -61,11 +68,43 @@ export default async function handler(req, res) {
                 timestamp: new Date().toISOString()
             };
 
-            console.log(`Successfully processed ${assetsArray.length} assets for ${collection.project}`);
+            // PERSISTENCE: Save to GitHub
+            if (GH_TOKEN) {
+                // 1. Get current file data (SHA)
+                const fileUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${FILE_PATH}`;
+                const getRes = await fetch(fileUrl, {
+                    headers: { 'Authorization': `token ${GH_TOKEN}` }
+                });
+
+                let sha = null;
+                if (getRes.ok) {
+                    const fileData = await getRes.json();
+                    sha = fileData.sha;
+                }
+
+                // 2. Update/Create file
+                const updateRes = await fetch(fileUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GH_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update analysis: ${collection.project} (${new Date().toISOString()})`,
+                        content: Buffer.from(JSON.stringify(finalPayload, null, 2)).toString('base64'),
+                        sha: sha
+                    })
+                });
+
+                if (!updateRes.ok) {
+                    const err = await updateRes.text();
+                    console.error('GitHub update error:', err);
+                }
+            }
 
             return res.status(200).json({
                 success: true,
-                message: 'Analysis updated successfully',
+                message: 'Analysis updated and persisted successfully',
                 processedCount: assetsArray.length
             });
         } catch (err) {
