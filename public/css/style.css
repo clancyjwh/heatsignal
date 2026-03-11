@@ -449,65 +449,6 @@ body {
     border: 1px solid var(--card-border);
 }
 
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.spreadsheet-container {
-    background: var(--sidebar-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    overflow-x: auto;
-    position: relative;
-    max-height: 600px;
-}
-
-#balancing-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    text-align: left;
-}
-
-#balancing-table th, #balancing-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--card-border);
-    white-space: nowrap;
-}
-
-#balancing-table th {
-    background: rgba(255, 255, 255, 0.05);
-    font-weight: 600;
-    color: var(--text-secondary);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-#balancing-table td.numeric {
-    font-family: 'JetBrains Mono', monospace;
-    text-align: right;
-}
-
-#balancing-table tfoot td {
-    background: rgba(59, 130, 246, 0.1);
-    font-weight: 700;
-    color: var(--accent-blue);
-    border-top: 2px solid var(--accent-blue);
-}
-
-.delta-pos {
-    color: var(--accent-green);
-}
-
-.delta-neg {
-    color: var(--accent-red);
-}
-
 .delta-neutral {
     opacity: 0.5;
 }

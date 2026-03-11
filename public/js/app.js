@@ -330,17 +330,6 @@ function resetBalancing() {
     });
 }
 
-function parseConcatenatedJson(str) {
-    if (!str) return [];
-    try {
-        // Handle format: {"A":"B"}{"C":"D"} -> [{"A":"B"},{"C":"D"}]
-        const formatted = '[' + str.replace(/\}\s*\{/g, '},{') + ']';
-        return JSON.parse(formatted);
-    } catch (e) {
-        console.error('JSON Parse Error:', e);
-        return [];
-    }
-}
 
 function renderBalancingResults(result) {
     document.getElementById('upload-area').style.display = 'none';
