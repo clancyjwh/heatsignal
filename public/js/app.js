@@ -10,24 +10,49 @@ const CURRENCY_PAIRS = [
     "XAU/AUD", "XAU/CAD", "XAU/CHF", "XAU/DKK", "XAU/EUR", "XAU/GBP", "XAU/HKD", "XAU/JPY", "XAU/MXN", "XAU/NOK", "XAU/NZD", "XAU/SEK", "XAU/SGD", "XAU/USD"
 ];
 
-const INDICATORS = ["MACD", "RSI", "SMA", "ROC", "BOLL", "CCI"];
+const INDICATORS = ["CCI", "RSI", "SMA", "BOLL", "MACD", "ROC"];
 
 let assetData = [];
 
 function init() {
-    // Generate initial random data
+    // Generate initial random data simulating the ResultCollection structure
     assetData = CURRENCY_PAIRS.map(pair => {
-        const score = (Math.random() * 20 - 10).toFixed(1);
-        const indicators = {};
+        const compositeScore = (Math.random() * 20 - 10).toFixed(2);
+        const inputs = {};
         INDICATORS.forEach(ind => {
-            // Random performance values for indicators (-10 to 10)
-            indicators[ind] = (Math.random() * 20 - 10).toFixed(1);
+            inputs[ind] = (Math.random() * 20 - 10).toFixed(1);
         });
-        return { pair, score: parseFloat(score), indicators };
+        return {
+            pair,
+            price: (Math.random() * 2).toFixed(5),
+            compositeScore: parseFloat(compositeScore),
+            inputs
+        };
     });
 
     renderAssets();
     setupEventListeners();
+}
+
+/**
+ * Handle incoming webhook data in ResultCollection format
+ * @param {Object} payload 
+ */
+function updateFromWebhook(payload) {
+    if (!payload.success || !payload.payloadCollection.assetsArray) return;
+
+    const incomingAssets = payload.payloadCollection.assetsArray;
+
+    assetData = incomingAssets.map(asset => {
+        return {
+            pair: asset.pair,
+            price: asset.price,
+            compositeScore: asset.cumulativeSignalCollection.compositeScore,
+            inputs: asset.inputsCollection
+        };
+    });
+
+    renderAssets();
 }
 
 function renderAssets() {
@@ -37,8 +62,8 @@ function renderAssets() {
 
     // Sort data
     let sortedData = [...assetData];
-    if (sortVal === 'score-desc') sortedData.sort((a, b) => b.score - a.score);
-    else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.score - b.score);
+    if (sortVal === 'score-desc') sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
+    else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.compositeScore - b.compositeScore);
     else if (sortVal === 'name') sortedData.sort((a, b) => a.pair.localeCompare(b.pair));
 
     // Filter data
@@ -51,19 +76,20 @@ function renderAssets() {
     sortedData.forEach((asset, index) => {
         const card = document.createElement('div');
 
-        // Color logic based on score
+        // Color logic based on compositeScore
         let colorClass = 'card-neutral';
-        if (asset.score >= 7) colorClass = 'card-high-pos';
-        else if (asset.score >= 3) colorClass = 'card-mid-pos';
-        else if (asset.score <= -7) colorClass = 'card-high-neg';
-        else if (asset.score <= -3) colorClass = 'card-mid-neg';
+        const score = asset.compositeScore;
+        if (score >= 7) colorClass = 'card-high-pos';
+        else if (score >= 3) colorClass = 'card-mid-pos';
+        else if (score <= -7) colorClass = 'card-high-neg';
+        else if (score <= -3) colorClass = 'card-mid-neg';
 
         card.className = `asset-card ${colorClass}`;
 
-        const displayScore = asset.score > 0 ? `+${asset.score}` : asset.score;
+        const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
 
         card.innerHTML = `
-            <span class="asset-rank">#${index + 1} FX Pair</span>
+            <span class="asset-rank">#${index + 1} FX</span>
             <div class="asset-name">${asset.pair}</div>
             <span class="asset-score">${displayScore}</span>
         `;
@@ -76,23 +102,44 @@ function renderAssets() {
 function showDetail(asset) {
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('modal-body');
-    const displayScore = asset.score > 0 ? `+${asset.score}` : asset.score;
+    const score = asset.compositeScore;
+    const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
+
+    // Gauge percentage logic (-10 to 10 mapped to 0-100)
+    const gaugePercent = ((score + 10) / 20) * 100;
+    const sentiment = score >= 0 ? "Positive" : "Negative";
+    const sentimentClass = score < 0 ? "neg" : "";
 
     body.innerHTML = `
-        <div class="breakdown-header">
-            <span class="asset-rank">Technical Breakdown</span>
-            <h2>${asset.pair}</h2>
-            <div class="breakdown-score">${displayScore}</div>
+        <div class="analytical-score-card ${sentimentClass}">
+            <span class="asc-title">Analytical Score</span>
+            <div class="asc-value">${displayScore}</div>
+            <span class="asc-label">${sentiment}</span>
+            <div class="asc-gauge">
+                <div class="asc-gauge-fill" style="width: ${gaugePercent}%"></div>
+            </div>
+            <div class="asc-gauge-markers">
+                <span>-10</span>
+                <span>0</span>
+                <span>+10</span>
+            </div>
         </div>
-        <div class="indicator-grid">
-            ${INDICATORS.map(ind => `
-                <div class="indicator-item">
-                    <span class="ind-name">${ind}</span>
-                    <span class="ind-val ${asset.indicators[ind] >= 0 ? 'val-pos' : 'val-neg'}">
-                        ${asset.indicators[ind] >= 0 ? '+' : ''}${asset.indicators[ind]}
-                    </span>
-                </div>
-            `).join('')}
+
+        <h3 class="technical-indicators-title">Technical Indicators</h3>
+        <div class="indicator-grid-detail">
+            ${INDICATORS.map(ind => {
+        const val = asset.inputs[ind];
+        let indClass = 'ind-neutral';
+        if (val >= 3) indClass = 'ind-green';
+        else if (val <= -3) indClass = 'ind-red';
+
+        return `
+                    <div class="indicator-card ${indClass}">
+                        <span class="ind-label-detail">${ind}</span>
+                        <div class="ind-value-detail">${val >= 0 ? '+' : ''}${val}</div>
+                    </div>
+                `;
+    }).join('')}
         </div>
     `;
 
@@ -122,6 +169,9 @@ function setupEventListeners() {
         });
     });
 }
+
+// Global exposure for debugging or manual webhook simulation
+window.simulateWebhook = updateFromWebhook;
 
 // Initial Call
 document.addEventListener('DOMContentLoaded', init);
