@@ -108,12 +108,7 @@ function renderAssets() {
     sortedData.forEach((asset, index) => {
         const card = document.createElement('div');
         const score = parseFloat(asset.compositeScore) || 0;
-
-        let colorClass = 'card-neutral';
-        if (score >= 7) colorClass = 'card-high-pos';
-        else if (score >= 3) colorClass = 'card-mid-pos';
-        else if (score <= -7) colorClass = 'card-high-neg';
-        else if (score <= -3) colorClass = 'card-mid-neg';
+        const colorClass = getValueIntensityClass(score);
 
         card.className = `asset-card ${colorClass}`;
         const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
@@ -136,10 +131,10 @@ function showDetail(asset) {
     const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
     const gaugePercent = ((score + 10) / 20) * 100;
     const sentiment = score >= 0 ? "Positive" : "Negative";
-    const sentimentClass = score < 0 ? "neg" : "";
+    const intensityClass = getValueIntensityClass(score);
 
     body.innerHTML = `
-        <div class="analytical-score-card ${sentimentClass}">
+        <div class="analytical-score-card ${intensityClass}">
             <span class="asc-title">Analytical Score</span>
             <div class="asc-value">${displayScore}</div>
             <span class="asc-label">${sentiment}</span>
@@ -156,9 +151,7 @@ function showDetail(asset) {
         <div class="indicator-grid-detail">
             ${INDICATORS.map(ind => {
         const val = asset.inputs ? (asset.inputs[ind] || 0) : 0;
-        let indClass = 'ind-neutral';
-        if (parseFloat(val) >= 3) indClass = 'ind-green';
-        else if (parseFloat(val) <= -3) indClass = 'ind-red';
+        const indClass = getValueIntensityClass(val);
         return `
                     <div class="indicator-card ${indClass}">
                         <span class="ind-label-detail">${ind}</span>

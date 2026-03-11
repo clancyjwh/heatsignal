@@ -225,26 +225,7 @@ body {
     letter-spacing: -1px;
 }
 
-/* Bold Color States */
-.card-high-pos {
-    background: #22c55e;
-}
-
-.card-mid-pos {
-    background: #10b981;
-}
-
-.card-neutral {
-    background: #334155;
-}
-
-.card-mid-neg {
-    background: #f97316;
-}
-
-.card-high-neg {
-    background: #ef4444;
-}
+/* Color states are now handled by .val-zero and .val-p1 through .val-n10 classes */
 
 /* Modal & Detail View Redesign */
 .modal {
@@ -286,7 +267,6 @@ body {
 
 /* Analytical Score Card (Top Section) */
 .analytical-score-card {
-    background: #22c55e;
     border-radius: 24px;
     padding: 3rem;
     text-align: center;
@@ -294,10 +274,6 @@ body {
     color: #fff;
     position: relative;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-}
-
-.analytical-score-card.neg {
-    background: #ef4444;
 }
 
 .asc-title {
@@ -389,23 +365,7 @@ body {
     font-weight: 800;
 }
 
-.ind-green {
-    background: rgba(34, 197, 94, 0.15);
-    border-color: #22c55e;
-    color: #22c55e;
-}
-
-.ind-red {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: #ef4444;
-    color: #ef4444;
-}
-
-.ind-neutral {
-    background: rgba(148, 163, 184, 0.05);
-    border-color: #64748b;
-    color: #fff;
-}
+/* Legacy color classes removed - now using .val-* classes */
 
 .loading {
     grid-column: 1 / -1;
