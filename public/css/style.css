@@ -145,6 +145,7 @@ body {
 .header-controls {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
 }
 
 .header-controls select {
@@ -155,33 +156,17 @@ body {
     border-radius: 6px;
     outline: none;
     font-size: 0.85rem;
+    cursor: pointer;
 }
 
 .global-sentiment {
     font-size: 0.85rem;
     color: var(--text-secondary);
     white-space: nowrap;
-}
-
-.sentiment-value.positive {
-    color: var(--accent-green);
-    font-weight: 700;
-}
-
-.header-controls select {
-    background: var(--card-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.03);
     padding: 0.4rem 0.75rem;
     border-radius: 6px;
-    outline: none;
-    font-size: 0.85rem;
-}
-
-.global-sentiment {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
+    border: 1px solid var(--card-border);
 }
 
 .sentiment-value.positive {
@@ -189,6 +174,7 @@ body {
     font-weight: 700;
 }
 
+/* Asset Grid - Compressed for 7 columns */
 .asset-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -197,7 +183,6 @@ body {
 
 .asset-card {
     border-radius: 4px;
-    /* Harder corners for density */
     padding: 0.75rem;
     transition: transform 0.15s ease, filter 0.15s ease;
     cursor: pointer;
@@ -302,7 +287,6 @@ body {
 /* Analytical Score Card (Top Section) */
 .analytical-score-card {
     background: #22c55e;
-    /* Default, will be dynamic */
     border-radius: 24px;
     padding: 3rem;
     text-align: center;
@@ -421,6 +405,13 @@ body {
     background: rgba(148, 163, 184, 0.05);
     border-color: #64748b;
     color: #fff;
+}
+
+.loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-secondary);
 }
 
 @media (max-width: 1200px) {

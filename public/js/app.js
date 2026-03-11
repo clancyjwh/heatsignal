@@ -15,44 +15,20 @@ const INDICATORS = ["CCI", "RSI", "SMA", "BOLL", "MACD", "ROC"];
 let assetData = [];
 
 function init() {
-    // Generate initial random data simulating the ResultCollection structure
-    assetData = CURRENCY_PAIRS.map(pair => {
-        const compositeScore = (Math.random() * 20 - 10).toFixed(2);
-        const inputs = {};
-        INDICATORS.forEach(ind => {
-            inputs[ind] = (Math.random() * 20 - 10).toFixed(1);
-        });
-        return {
-            pair,
-            price: (Math.random() * 2).toFixed(5),
-            compositeScore: parseFloat(compositeScore),
-            inputs
-        };
-    });
+    // Stop randomizing values on every refresh.
+    // Initialize with 0s. 
+    assetData = CURRENCY_PAIRS.map(pair => ({
+        pair,
+        price: (0).toFixed(5),
+        compositeScore: 0,
+        inputs: { CCI: 0, RSI: 0, SMA: 0, BOLL: 0, MACD: 0, ROC: 0 }
+    }));
 
     renderAssets();
     setupEventListeners();
-}
 
-/**
- * Handle incoming webhook data in ResultCollection format
- * @param {Object} payload 
- */
-function updateFromWebhook(payload) {
-    if (!payload.success || !payload.payloadCollection.assetsArray) return;
-
-    const incomingAssets = payload.payloadCollection.assetsArray;
-
-    assetData = incomingAssets.map(asset => {
-        return {
-            pair: asset.pair,
-            price: asset.price,
-            compositeScore: asset.cumulativeSignalCollection.compositeScore,
-            inputs: asset.inputsCollection
-        };
-    });
-
-    renderAssets();
+    // Attempt to fetch real data from the API if implemented
+    // fetchAnalysisData();
 }
 
 function renderAssets() {
@@ -75,8 +51,6 @@ function renderAssets() {
 
     sortedData.forEach((asset, index) => {
         const card = document.createElement('div');
-
-        // Color logic based on compositeScore
         let colorClass = 'card-neutral';
         const score = asset.compositeScore;
         if (score >= 7) colorClass = 'card-high-pos';
@@ -85,7 +59,6 @@ function renderAssets() {
         else if (score <= -3) colorClass = 'card-mid-neg';
 
         card.className = `asset-card ${colorClass}`;
-
         const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
 
         card.innerHTML = `
@@ -104,8 +77,6 @@ function showDetail(asset) {
     const body = document.getElementById('modal-body');
     const score = asset.compositeScore;
     const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
-
-    // Gauge percentage logic (-10 to 10 mapped to 0-100)
     const gaugePercent = ((score + 10) / 20) * 100;
     const sentiment = score >= 0 ? "Positive" : "Negative";
     const sentimentClass = score < 0 ? "neg" : "";
@@ -124,7 +95,6 @@ function showDetail(asset) {
                 <span>+10</span>
             </div>
         </div>
-
         <h3 class="technical-indicators-title">Technical Indicators</h3>
         <div class="indicator-grid-detail">
             ${INDICATORS.map(ind => {
@@ -132,7 +102,6 @@ function showDetail(asset) {
         let indClass = 'ind-neutral';
         if (val >= 3) indClass = 'ind-green';
         else if (val <= -3) indClass = 'ind-red';
-
         return `
                     <div class="indicator-card ${indClass}">
                         <span class="ind-label-detail">${ind}</span>
@@ -142,36 +111,19 @@ function showDetail(asset) {
     }).join('')}
         </div>
     `;
-
     modal.classList.add('active');
 }
 
 function setupEventListeners() {
     document.getElementById('sort-control').addEventListener('change', renderAssets);
     document.getElementById('asset-search').addEventListener('input', renderAssets);
-
-    // Modal close
     document.querySelector('.close-modal').addEventListener('click', () => {
         document.getElementById('detail-modal').classList.remove('active');
     });
-
     window.addEventListener('click', (e) => {
         const modal = document.getElementById('detail-modal');
         if (e.target === modal) modal.classList.remove('active');
     });
-
-    // Sidebar navigation simulation
-    const navItems = document.querySelectorAll('.main-nav li');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(ni => ni.classList.remove('active'));
-            item.classList.add('active');
-        });
-    });
 }
 
-// Global exposure for debugging or manual webhook simulation
-window.simulateWebhook = updateFromWebhook;
-
-// Initial Call
 document.addEventListener('DOMContentLoaded', init);
