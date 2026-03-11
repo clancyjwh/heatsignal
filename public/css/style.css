@@ -425,3 +425,158 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Balancing Tab Styles */
+.balancing-container {
+    padding: 1rem;
+}
+
+.upload-area {
+    border: 2px dashed var(--card-border);
+    border-radius: 12px;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.upload-area:hover, .upload-area.dragover {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: var(--accent-blue);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.upload-area h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.upload-area p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.spreadsheet-container {
+    background: var(--sidebar-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow-x: auto;
+    position: relative;
+    max-height: 600px;
+}
+
+#balancing-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    text-align: left;
+}
+
+#balancing-table th, #balancing-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--card-border);
+    white-space: nowrap;
+}
+
+#balancing-table th {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    color: var(--text-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#balancing-table td.numeric {
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+}
+
+#balancing-table tfoot td {
+    background: rgba(59, 130, 246, 0.1);
+    font-weight: 700;
+    color: var(--accent-blue);
+    border-top: 2px solid var(--accent-blue);
+}
+
+.delta-pos {
+    color: var(--accent-green);
+}
+
+.delta-neg {
+    color: var(--accent-red);
+}
+
+.delta-neutral {
+    opacity: 0.5;
+}
+
+/* Value Intensity Gradients */
+.val-zero { background-color: rgba(148, 163, 184, 0.15) !important; color: #94a3b8; }
+
+.val-p1 { background-color: rgba(34, 197, 94, 0.1) !important; color: #86efac; }
+.val-p2 { background-color: rgba(34, 197, 94, 0.25) !important; color: #4ade80; }
+.val-p3 { background-color: rgba(34, 197, 94, 0.4) !important; color: #22c55e; }
+.val-p4 { background-color: rgba(34, 197, 94, 0.6) !important; color: #16a34a; }
+.val-p5 { background-color: rgba(22, 163, 74, 0.8) !important; color: #ffffff; font-weight: 700; }
+
+.val-n1 { background-color: rgba(239, 68, 68, 0.1) !important; color: #fca5a5; }
+.val-n2 { background-color: rgba(239, 68, 68, 0.25) !important; color: #f87171; }
+.val-n3 { background-color: rgba(239, 68, 68, 0.4) !important; color: #ef4444; }
+.val-n4 { background-color: rgba(239, 68, 68, 0.6) !important; color: #dc2626; }
+.val-n5 { background-color: rgba(220, 38, 38, 0.8) !important; color: #ffffff; font-weight: 700; }
+
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-blue);
+    margin: 2rem auto;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

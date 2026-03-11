@@ -11,6 +11,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -52,14 +53,14 @@
         <!-- Main Content -->
         <main class="content">
             <header class="dashboard-header">
-                <h1 class="page-title">Market Analysis</h1>
+                <h1 class="page-title" id="page-title">Market Analysis</h1>
 
-                <div class="search-container">
+                <div class="search-container" id="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="asset-search" placeholder="Search 105 FX pairs...">
                 </div>
 
-                <div class="header-controls">
+                <div class="header-controls" id="header-controls">
                     <select id="sort-control">
                         <option value="score-desc">Highest Score</option>
                         <option value="score-asc">Lowest Score</option>
@@ -67,7 +68,7 @@
                     </select>
                 </div>
 
-                <div class="global-sentiment">
+                <div class="global-sentiment" id="global-sentiment">
                     Sentiment: <span class="sentiment-value positive">+2.4</span>
                 </div>
             </header>
@@ -76,6 +77,32 @@
                 <div class="asset-grid" id="asset-grid">
                     <!-- Assets will be injected here by JS -->
                     <div class="loading">Loading 105 FX pairs...</div>
+                </div>
+            </section>
+
+            <section class="dashboard-section" id="balancing-section" style="display: none;">
+                <div class="balancing-container">
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-icon">📁</div>
+                        <h3>Upload Excel for Balancing</h3>
+                        <p>Drag & drop or click to select Excel sheet</p>
+                        <input type="file" id="file-input" accept=".xlsx, .xls" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Select File</button>
+                    </div>
+
+                    <div id="balancing-results-container" style="display: none;">
+                        <div class="results-header">
+                            <h2>Balancing Results</h2>
+                            <button class="btn btn-secondary" onclick="location.reload()">Clear Results</button>
+                        </div>
+                        <div class="spreadsheet-container">
+                            <table id="balancing-table">
+                                <thead id="balancing-thead"></thead>
+                                <tbody id="balancing-tbody"></tbody>
+                                <tfoot id="balancing-tfoot"></tfoot>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>

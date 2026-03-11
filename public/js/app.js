@@ -2,7 +2,8 @@
 const CONFIG = {
     repo: 'heatsignal',
     owner: 'clancyjwh',
-    dataPath: 'public/data/latest_analysis.json'
+    dataPath: 'public/data/latest_analysis.json',
+    balancingWebhook: 'https://hook.us2.make.com/11xm2l8l6yfy8fh1m70hraxdldcgo4eq'
 };
 
 const CURRENCY_PAIRS = [
@@ -180,6 +181,215 @@ function setupEventListeners() {
         const modal = document.getElementById('detail-modal');
         if (e.target === modal) modal.classList.remove('active');
     });
+
+    // Tab Switching
+    document.querySelectorAll('.main-nav li').forEach(item => {
+        item.addEventListener('click', () => {
+            const section = item.getAttribute('data-section');
+            switchTab(section);
+        });
+    });
+
+    // File Upload Logic
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+
+    if (uploadArea && fileInput) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }, false);
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+    }
+}
+
+function switchTab(section) {
+    // Update active state in nav
+    document.querySelectorAll('.main-nav li').forEach(li => li.classList.remove('active'));
+    document.querySelector(`.main-nav li[data-section="${section}"]`).classList.add('active');
+
+    // Hide all sections
+    document.getElementById('analysis-section').style.display = 'none';
+    document.getElementById('balancing-section').style.display = 'none';
+
+    // Update Header Visibility
+    const searchContainer = document.getElementById('search-container');
+    const headerControls = document.getElementById('header-controls');
+    const globalSentiment = document.getElementById('global-sentiment');
+    const pageTitle = document.getElementById('page-title');
+
+    if (section === 'analysis') {
+        document.getElementById('analysis-section').style.display = 'block';
+        searchContainer.style.display = 'flex';
+        headerControls.style.display = 'flex';
+        globalSentiment.style.display = 'block';
+        pageTitle.textContent = 'Market Analysis';
+    } else if (section === 'balancing') {
+        document.getElementById('balancing-section').style.display = 'block';
+        searchContainer.style.display = 'none';
+        headerControls.style.display = 'none';
+        globalSentiment.style.display = 'none';
+        pageTitle.textContent = 'Balancing Tool';
+    }
+}
+
+let originalExcelData = null;
+
+function getValueIntensityClass(val) {
+    const num = parseFloat(val);
+    if (isNaN(num) || num === 0) return 'val-zero';
+    
+    const abs = Math.abs(num);
+    let level = 1;
+    if (abs >= 10) level = 5;
+    else if (abs >= 5) level = 4;
+    else if (abs >= 1) level = 3;
+    else if (abs >= 0.1) level = 2;
+
+    return num > 0 ? `val-p${level}` : `val-n${level}`;
+}
+
+async function handleFiles(files) {
+    if (files.length === 0) return;
+    const file = files[0];
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // Store original data for "Change" calculation
+        originalExcelData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Convert to CSV
+        const csv = XLSX.utils.sheet_to_csv(worksheet);
+        
+        await submitToWebhook(csv);
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+async function submitToWebhook(csv) {
+    const uploadArea = document.getElementById('upload-area');
+    uploadArea.innerHTML = `
+        <div class="upload-icon">⚡</div>
+        <h3>Processing balancing...</h3>
+        <p>Sending data to high-performance engine</p>
+        <div class="loading-spinner"></div>
+    `;
+
+    try {
+        const response = await fetch(CONFIG.balancingWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/csv' },
+            body: csv
+        });
+
+        if (!response.ok) throw new Error('Webhook error');
+
+        const result = await response.json();
+        renderBalancingResults(result);
+    } catch (err) {
+        console.error('Webhook failed:', err);
+        uploadArea.innerHTML = `
+            <div class="upload-icon">❌</div>
+            <h3>Submission Failed</h3>
+            <p>${err.message}</p>
+            <button class="btn btn-primary" onclick="location.reload()">Try Again</button>
+        `;
+    }
+}
+
+function renderBalancingResults(data) {
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('balancing-results-container').style.display = 'block';
+
+    const thead = document.getElementById('balancing-thead');
+    const tbody = document.getElementById('balancing-tbody');
+    const tfoot = document.getElementById('balancing-tfoot');
+
+    const headers = Object.keys(data[0]);
+    // Add "Change" header
+    headers.push('Change');
+
+    thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+    let html = '';
+    const columnSums = {};
+
+    data.forEach((row, rowIndex) => {
+        html += '<tr>';
+        const originalRow = originalExcelData[rowIndex] || {};
+        
+        headers.forEach(h => {
+            if (h === 'Change') {
+                // Heuristic: sum all numeric changes in the row
+                let totalDelta = 0;
+                Object.keys(row).forEach(key => {
+                    const newVal = parseFloat(row[key]);
+                    const oldVal = parseFloat(originalRow[key]);
+                    if (!isNaN(newVal) && !isNaN(oldVal)) {
+                        totalDelta += (newVal - oldVal);
+                    }
+                });
+
+                const intensityClass = getValueIntensityClass(totalDelta);
+                const deltaPrefix = totalDelta > 0 ? '+' : '';
+                html += `<td class="numeric ${intensityClass}">${deltaPrefix}${totalDelta.toFixed(2)}</td>`;
+            } else {
+                const val = row[h];
+                const isNumeric = !isNaN(parseFloat(val)) && isFinite(val);
+                const intensityClass = isNumeric ? getValueIntensityClass(val) : '';
+                html += `<td class="${isNumeric ? 'numeric' : ''} ${intensityClass}">${val}</td>`;
+
+                if (isNumeric) {
+                    columnSums[h] = (columnSums[h] || 0) + parseFloat(val);
+                }
+            }
+        });
+        html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+
+    // Render Sum Row
+    let footHtml = '<tr>';
+    headers.forEach(h => {
+        if (h === 'Change') {
+            footHtml += '<td class="val-zero">-</td>'; 
+        } else if (columnSums[h] !== undefined) {
+            const intensityClass = getValueIntensityClass(columnSums[h]);
+            footHtml += `<td class="numeric ${intensityClass}">${columnSums[h].toFixed(2)}</td>`;
+        } else {
+            footHtml += '<td class="val-zero">TOTAL</td>';
+        }
+    });
+    footHtml += '</tr>';
+    tfoot.innerHTML = footHtml;
 }
 
 document.addEventListener('DOMContentLoaded', init);
