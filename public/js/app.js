@@ -20,7 +20,8 @@ function init() {
         const score = (Math.random() * 20 - 10).toFixed(1);
         const indicators = {};
         INDICATORS.forEach(ind => {
-            indicators[ind] = Math.random() > 0.5 ? 1 : -1; // Simplified for initial visualization
+            // Random performance values for indicators (-10 to 10)
+            indicators[ind] = (Math.random() * 20 - 10).toFixed(1);
         });
         return { pair, score: parseFloat(score), indicators };
     });
@@ -49,31 +50,68 @@ function renderAssets() {
 
     sortedData.forEach((asset, index) => {
         const card = document.createElement('div');
-        card.className = 'asset-card';
 
-        let scoreClass = 'score-mid';
-        if (asset.score > 3) scoreClass = 'score-high';
-        if (asset.score < -3) scoreClass = 'score-low';
+        // Color logic based on score
+        let colorClass = 'card-neutral';
+        if (asset.score >= 7) colorClass = 'card-high-pos';
+        else if (asset.score >= 3) colorClass = 'card-mid-pos';
+        else if (asset.score <= -7) colorClass = 'card-high-neg';
+        else if (asset.score <= -3) colorClass = 'card-mid-neg';
+
+        card.className = `asset-card ${colorClass}`;
 
         const displayScore = asset.score > 0 ? `+${asset.score}` : asset.score;
 
         card.innerHTML = `
-            <span class="asset-rank">#${index + 1} Foreign Exchange</span>
+            <span class="asset-rank">#${index + 1} FX Pair</span>
             <div class="asset-name">${asset.pair}</div>
-            <span class="asset-score ${scoreClass}">${displayScore}</span>
-            <div class="indicator-dots">
-                ${INDICATORS.map(ind => `
-                    <div class="indicator-dot ${asset.indicators[ind] > 0 ? 'active-green' : 'active-red'}" title="${ind}"></div>
-                `).join('')}
-            </div>
+            <span class="asset-score">${displayScore}</span>
         `;
+
+        card.addEventListener('click', () => showDetail(asset));
         grid.appendChild(card);
     });
+}
+
+function showDetail(asset) {
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('modal-body');
+    const displayScore = asset.score > 0 ? `+${asset.score}` : asset.score;
+
+    body.innerHTML = `
+        <div class="breakdown-header">
+            <span class="asset-rank">Technical Breakdown</span>
+            <h2>${asset.pair}</h2>
+            <div class="breakdown-score">${displayScore}</div>
+        </div>
+        <div class="indicator-grid">
+            ${INDICATORS.map(ind => `
+                <div class="indicator-item">
+                    <span class="ind-name">${ind}</span>
+                    <span class="ind-val ${asset.indicators[ind] >= 0 ? 'val-pos' : 'val-neg'}">
+                        ${asset.indicators[ind] >= 0 ? '+' : ''}${asset.indicators[ind]}
+                    </span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    modal.classList.add('active');
 }
 
 function setupEventListeners() {
     document.getElementById('sort-control').addEventListener('change', renderAssets);
     document.getElementById('asset-search').addEventListener('input', renderAssets);
+
+    // Modal close
+    document.querySelector('.close-modal').addEventListener('click', () => {
+        document.getElementById('detail-modal').classList.remove('active');
+    });
+
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('detail-modal');
+        if (e.target === modal) modal.classList.remove('active');
+    });
 
     // Sidebar navigation simulation
     const navItems = document.querySelectorAll('.main-nav li');
@@ -81,7 +119,6 @@ function setupEventListeners() {
         item.addEventListener('click', () => {
             navItems.forEach(ni => ni.classList.remove('active'));
             item.classList.add('active');
-            // Section switching logic could go here
         });
     });
 }
