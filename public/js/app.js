@@ -307,9 +307,27 @@ async function submitToWebhook(csv) {
             <div class="upload-icon">❌</div>
             <h3>Submission Failed</h3>
             <p>${err.message}</p>
-            <button class="btn btn-primary" onclick="location.reload()">Try Again</button>
+            <button class="btn btn-primary" onclick="resetBalancing()">Try Again</button>
         `;
     }
+}
+
+function resetBalancing() {
+    originalExcelData = null;
+    document.getElementById('balancing-results-container').style.display = 'none';
+    const uploadArea = document.getElementById('upload-area');
+    uploadArea.style.display = 'block';
+    uploadArea.innerHTML = `
+        <div class="upload-icon">📁</div>
+        <h3>Upload Excel for Balancing</h3>
+        <p>Drag & drop or click to select Excel sheet</p>
+        <input type="file" id="file-input" accept=".xlsx, .xls" style="display: none;">
+        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Select File</button>
+    `;
+    // Re-bind file input listener
+    document.getElementById('file-input').addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
 }
 
 function parseConcatenatedJson(str) {
@@ -328,64 +346,18 @@ function renderBalancingResults(result) {
     document.getElementById('upload-area').style.display = 'none';
     document.getElementById('balancing-results-container').style.display = 'block';
 
+    const formatList = (str) => {
+        if (!str) return "No data available";
+        // Split by comma+space or comma, then join with newlines
+        return str.split(/,\s*/).map(item => item.trim()).join('\n');
+    };
+
     // 1. Handle Lists
     const list1El = document.getElementById('list-1-content');
     const list2El = document.getElementById('list-2-content');
     
-    if (list1El) list1El.textContent = result["List 1"] || "No data available";
-    if (list2El) list2El.textContent = result["List 2"] || "No data available";
-
-    // 2. Parse Balance Data
-    const balanceData = parseConcatenatedJson(result["Balance"]);
-    if (balanceData.length === 0) return;
-
-    const thead = document.getElementById('balancing-thead');
-    const tbody = document.getElementById('balancing-tbody');
-    const tfoot = document.getElementById('balancing-tfoot');
-
-    // Expected columns: Pair, Old Ratio, New Ratio, Ratio Change
-    const columns = ['Pair', 'Old Ratio', 'New Ratio', 'Ratio Change'];
-    thead.innerHTML = `<tr>${columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
-
-    let html = '';
-    const columnSums = { 'Old Ratio': 0, 'New Ratio': 0, 'Ratio Change': 0 };
-
-    balanceData.forEach(row => {
-        html += '<tr>';
-        columns.forEach(col => {
-            const val = row[col];
-            const isNumeric = col !== 'Pair';
-            const numVal = parseFloat(val) || 0;
-            
-            let displayVal = val;
-            let intensityClass = '';
-            
-            if (isNumeric) {
-                intensityClass = getValueIntensityClass(numVal);
-                displayVal = numVal.toFixed(2);
-                columnSums[col] += numVal;
-            }
-
-            html += `<td class="${isNumeric ? 'numeric' : ''} ${intensityClass}">${displayVal}</td>`;
-        });
-        html += '</tr>';
-    });
-
-    tbody.innerHTML = html;
-
-    // 3. Render Sum Row
-    let footHtml = '<tr>';
-    columns.forEach(col => {
-        if (col === 'Pair') {
-            footHtml += '<td class="val-zero">TOTAL</td>';
-        } else {
-            const sum = columnSums[col];
-            const intensityClass = getValueIntensityClass(sum);
-            footHtml += `<td class="numeric ${intensityClass}">${sum.toFixed(2)}</td>`;
-        }
-    });
-    footHtml += '</tr>';
-    tfoot.innerHTML = footHtml;
+    if (list1El) list1El.textContent = formatList(result["List 1"]);
+    if (list2El) list2El.textContent = formatList(result["List 2"]);
 }
 
 document.addEventListener('DOMContentLoaded', init);
