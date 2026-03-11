@@ -1,10 +1,3 @@
-// Configuration - Replace with your Supabase details or set via environment variables if using a build step
-// For this static version, we can use a small helper or just fetch directly
-const SUPABASE_CONFIG = {
-    url: '', // User to fill
-    anonKey: '' // User to fill
-};
-
 const CURRENCY_PAIRS = [
     "AUD/CAD", "AUD/CHF", "AUD/DKK", "AUD/HKD", "AUD/JPY", "AUD/MXN", "AUD/NOK", "AUD/NZD", "AUD/SEK", "AUD/SGD", "AUD/USD",
     "CAD/CHF", "CAD/DKK", "CAD/HKD", "CAD/JPY", "CAD/MXN", "CAD/NOK", "CAD/NZD", "CAD/SEK", "CAD/SGD",
@@ -21,47 +14,45 @@ const INDICATORS = ["CCI", "RSI", "SMA", "BOLL", "MACD", "ROC"];
 let assetData = [];
 
 async function init() {
-    // 1. Set default state while loading
-    assetData = CURRENCY_PAIRS.map(pair => ({
-        pair,
-        price: (0).toFixed(5),
-        compositeScore: 0,
-        inputs: { CCI: 0, RSI: 0, SMA: 0, BOLL: 0, MACD: 0, ROC: 0 }
-    }));
+    // 1. Check if we have data in localStorage from a previous push
+    const cached = localStorage.getItem('heatsignal_latest_cache');
+    if (cached) {
+        assetData = JSON.parse(cached);
+        renderAssets();
+    } else {
+        // Initial blank state
+        assetData = CURRENCY_PAIRS.map(pair => ({
+            pair,
+            price: "0.00000",
+            compositeScore: 0,
+            inputs: { CCI: 0, RSI: 0, SMA: 0, BOLL: 0, MACD: 0, ROC: 0 }
+        }));
+        renderAssets();
+    }
 
-    renderAssets();
     setupEventListeners();
 
-    // 2. Try to fetch real persistent data if Supabase is configured
-    if (SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey) {
-        await fetchLatestData();
-    }
+    // 2. Initial fetch from API (in case a webhook came in while offline)
+    await fetchLatestData();
+
+    // 3. Poll for updates every 30 seconds (Simple "Stay the same" logic)
+    setInterval(fetchLatestData, 30000);
 }
 
 async function fetchLatestData() {
     try {
-        const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/analysis?select=*`, {
-            headers: {
-                'apikey': SUPABASE_CONFIG.anonKey,
-                'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`
-            }
-        });
+        const response = await fetch('/api/update-analysis');
+        const result = await response.json();
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data && data.length > 0) {
-                // Map DB schema to app state
-                assetData = data.map(item => ({
-                    pair: item.pair,
-                    price: item.price.toFixed(5),
-                    compositeScore: item.composite_score,
-                    inputs: item.indicators
-                }));
-                renderAssets();
-            }
+        if (result.success && result.data) {
+            assetData = result.data;
+            // Persist locally for immediate load on next refresh
+            localStorage.setItem('heatsignal_latest_cache', JSON.stringify(assetData));
+            renderAssets();
+            console.log('Dashboard updated with latest webhook data.');
         }
     } catch (err) {
-        console.error('Failed to fetch from Supabase:', err);
+        console.error('Could not sync with latest analysis:', err);
     }
 }
 
@@ -70,13 +61,11 @@ function renderAssets() {
     const sortVal = document.getElementById('sort-control').value;
     const searchVal = document.getElementById('asset-search').value.toLowerCase();
 
-    // Sort data
     let sortedData = [...assetData];
     if (sortVal === 'score-desc') sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
     else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.compositeScore - b.compositeScore);
     else if (sortVal === 'name') sortedData.sort((a, b) => a.pair.localeCompare(b.pair));
 
-    // Filter data
     if (searchVal) {
         sortedData = sortedData.filter(item => item.pair.toLowerCase().includes(searchVal));
     }
@@ -132,7 +121,7 @@ function showDetail(asset) {
         <h3 class="technical-indicators-title">Technical Indicators</h3>
         <div class="indicator-grid-detail">
             ${INDICATORS.map(ind => {
-        const val = asset.inputs[ind];
+        const val = asset.inputs[ind] || 0;
         let indClass = 'ind-neutral';
         if (val >= 3) indClass = 'ind-green';
         else if (val <= -3) indClass = 'ind-red';
