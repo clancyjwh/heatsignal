@@ -245,18 +245,29 @@ function switchTab(section) {
 
     // Update Header Visibility
     const searchContainer = document.getElementById('search-container');
+    const lastUpdatedContainer = document.getElementById('last-updated-container');
+    const globalSentiment = document.getElementById('global-sentiment');
+    const pageTitle = document.getElementById('page-title');
+
     if (section === 'analysis') {
         document.getElementById('analysis-section').style.display = 'block';
-        searchContainer.style.display = 'flex';
-        document.getElementById('last-updated-container').style.display = 'block';
-        globalSentiment.style.display = 'block';
-        pageTitle.textContent = 'Market Analysis';
+        if (searchContainer) searchContainer.style.display = 'flex';
+        if (lastUpdatedContainer) lastUpdatedContainer.style.display = 'block';
+        if (globalSentiment) globalSentiment.style.display = 'block';
+        if (pageTitle) pageTitle.textContent = 'Market Analysis';
+        renderAssets();
+    } else if (section === 'balancing') {
+        document.getElementById('balancing-section').style.display = 'block';
+        if (searchContainer) searchContainer.style.display = 'none';
+        if (lastUpdatedContainer) lastUpdatedContainer.style.display = 'none';
+        if (globalSentiment) globalSentiment.style.display = 'none';
+        if (pageTitle) pageTitle.textContent = 'Account Balancing';
     } else if (section === 'rfq') {
         document.getElementById('rfq-section').style.display = 'block';
-        searchContainer.style.display = 'none';
-        document.getElementById('last-updated-container').style.display = 'none';
-        globalSentiment.style.display = 'none';
-        pageTitle.textContent = 'Request for Quote';
+        if (searchContainer) searchContainer.style.display = 'none';
+        if (lastUpdatedContainer) lastUpdatedContainer.style.display = 'none';
+        if (globalSentiment) globalSentiment.style.display = 'none';
+        if (pageTitle) pageTitle.textContent = 'Request for Quote';
         
         // Display User ID in setup guide
         const userIdDisplay = document.getElementById('user-id-display');
