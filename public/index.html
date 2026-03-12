@@ -12,6 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -60,12 +61,8 @@
                     <input type="text" id="asset-search" placeholder="Search 105 FX pairs...">
                 </div>
 
-                <div class="header-controls" id="header-controls">
-                    <select id="sort-control">
-                        <option value="score-desc">Highest Score</option>
-                        <option value="score-asc">Lowest Score</option>
-                        <option value="name">Alphabetical</option>
-                    </select>
+                <div class="last-updated-badge" id="last-updated-container">
+                    Updated: <span id="last-updated-time">---</span>
                 </div>
 
                 <div class="global-sentiment" id="global-sentiment">
@@ -104,6 +101,57 @@
                             <div class="list-box">
                                 <h3>List 2</h3>
                                 <div id="list-2-content" class="list-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-section" id="rfq-section" style="display: none;">
+                <div class="rfq-container">
+                    <div id="rfq-setup-instructions" class="rfq-stage">
+                        <div class="setup-guide">
+                            <div class="setup-header">
+                                <div class="setup-icon">📥</div>
+                                <h2>Bloomberg Streamer Setup</h2>
+                                <p>Follow these steps to link your Excel pricing to HeatSignal.</p>
+                            </div>
+                            
+                            <div class="setup-steps">
+                                <div class="step">
+                                    <div class="step-num">1</div>
+                                    <div class="step-content">
+                                        <h4>Download Add-in</h4>
+                                        <p>Download the <strong>Bloomberg Streamer</strong> Excel Add-in from the portal.</p>
+                                        <button class="btn btn-secondary btn-sm">Download .xlam</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="step">
+                                    <div class="step-num">2</div>
+                                    <div class="step-content">
+                                        <h4>Enable in Excel</h4>
+                                        <p>Open Excel and go to <strong>File → Options → Add-ins → Go</strong> and enable <strong>Bloomberg Streamer</strong>.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="step">
+                                    <div class="step-num">3</div>
+                                    <div class="step-content">
+                                        <h4>Set User ID</h4>
+                                        <p>In the HeatSignal tab in Excel, press <strong>Set User ID</strong> and enter your unique ID below.</p>
+                                        <div class="user-id-box">
+                                            <code id="user-id-display">Generating...</code>
+                                            <button class="btn btn-secondary btn-xs" onclick="copyUserId()">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="setup-footer">
+                                <div class="status-badge waiting">
+                                    <span class="pulse-amber"></span> Waiting for incoming stream...
+                                </div>
                             </div>
                         </div>
                     </div>
