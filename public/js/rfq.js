@@ -36,16 +36,26 @@ const countdownSpan = document.getElementById('countdown');
 // Initialize App
 async function initRFQ() {
     console.log('📡 Initializing RFQ Module...');
+    
+    // Check local storage first (Guest Mode)
+    const cachedInitials = localStorage.getItem('rfq_trader_initials');
+    if (cachedInitials) {
+        traderInitials = cachedInitials;
+        updateUIWithInitials();
+        if (!sessionId) startStreamingSession();
+    }
+
     const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
     
-    // If no session, RFQ cannot proceed (requires auth for profiles)
-    if (sessionError || !session) {
-        console.warn('RFQ requires session.');
-        return;
+    if (session && !sessionError) {
+        currentUser = session.user;
+        // If logged in, initials from DB take precedence
+        await checkTraderInitials();
+    } else {
+        console.warn('RFQ operating in Guest Mode.');
+        if (!traderInitials) showInitialsModal();
     }
     
-    currentUser = session.user;
-    await checkTraderInitials();
     setupRecipientValidation();
 }
 
@@ -231,7 +241,7 @@ if (submitBtn) {
             recipientFlags: {
                 Blackheath: isChecked('blackheath') ? 'yes' : 'no',
                 Velocity: isChecked('velocity') ? 'yes' : 'no',
-                Other: isChecked('me') ? currentUser.email : 'no',
+                Other: isChecked('me') ? (currentUser?.email || 'Guest') : 'no',
                 Onedrive: document.getElementById('onedrive-checkbox').checked ? 'yes' : 'no'
             }
         };
@@ -292,11 +302,21 @@ if (saveInitialsBtn) {
     saveInitialsBtn.addEventListener('click', async () => {
         const initials = initialsInput.value.trim().toUpperCase();
         if (initials.length < 2 || initials.length > 3) { alert("Please enter 2 or 3 initials."); return; }
-        const { error } = await supabaseClient.from('profiles').upsert({ user_id: currentUser.id, trader_initials: initials, email: currentUser.email });
-        if (error) { alert("Failed to save initials."); } else {
-            traderInitials = initials;
-            updateUIWithInitials();
-            startStreamingSession();
+        
+        // Save locally first for immediate use
+        localStorage.setItem('rfq_trader_initials', initials);
+        traderInitials = initials;
+        updateUIWithInitials();
+        startStreamingSession();
+
+        // Try to save to DB if logged in
+        if (currentUser) {
+            const { error } = await supabaseClient.from('profiles').upsert({ 
+                user_id: currentUser.id, 
+                trader_initials: initials, 
+                email: currentUser.email 
+            });
+            if (error) console.error("Failed to sync initials to Supabase:", error);
         }
     });
 }
