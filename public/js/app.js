@@ -3,21 +3,8 @@ const CONFIG = {
     repo: 'heatsignal',
     owner: 'clancyjwh',
     dataPath: 'public/data/latest_analysis.json',
-    balancingWebhook: 'https://hook.us2.make.com/11xm2l8l6yfy8fh1m70hraxdldcgo4eq',
-    supabaseUrl: 'https://bcvgjejxxkletazmxvsq.supabase.co',
-    supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjdmdqZWp4eGtsZXRhem14dnNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODE0MzMsImV4cCI6MjA4MDk1NzQzM30.UJRMF8IGKIriSov_I1wfclyDwmCMZKgwTMVkc8ZBI3g'
+    balancingWebhook: 'https://hook.us2.make.com/11xm2l8l6yfy8fh1m70hraxdldcgo4eq'
 };
-
-let supabase = null;
-let userId = localStorage.getItem('heatsignal_user_id') || generateUUID();
-localStorage.setItem('heatsignal_user_id', userId);
-
-function generateUUID() {
-    return 'xxxx-xxxx-4xxx-yxxx-xxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
 
 const CURRENCY_PAIRS = [
     "AUD/CAD", "AUD/CHF", "AUD/DKK", "AUD/HKD", "AUD/JPY", "AUD/MXN", "AUD/NOK", "AUD/NZD", "AUD/SEK", "AUD/SGD", "AUD/USD",
@@ -81,14 +68,6 @@ async function syncData() {
                 localStorage.setItem('heatsignal_data', JSON.stringify(assetData));
                 renderAssets();
                 updateGlobalSentiment();
-                
-                // Update Last Updated Timestamp
-                const timeEl = document.getElementById('last-updated-time');
-                if (timeEl) {
-                    const now = new Date();
-                    timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                }
-
                 console.log('✅ Sync Complete:', result.assetCount, 'pairs updated.');
                 return;
             }
@@ -112,11 +91,13 @@ function updateGlobalSentiment() {
 
 function renderAssets() {
     const grid = document.getElementById('asset-grid');
+    const sortVal = document.getElementById('sort-control').value;
     const searchVal = document.getElementById('asset-search').value.toLowerCase();
 
     let sortedData = [...assetData];
-    // Default to score-desc sorting since selector is removed
-    sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
+    if (sortVal === 'score-desc') sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
+    else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.compositeScore - b.compositeScore);
+    else if (sortVal === 'name') sortedData.sort((a, b) => a.pair.localeCompare(b.pair));
 
     if (searchVal) {
         sortedData = sortedData.filter(item => item.pair.toLowerCase().includes(searchVal));
@@ -184,6 +165,7 @@ function showDetail(asset) {
 }
 
 function setupEventListeners() {
+    document.getElementById('sort-control').addEventListener('change', renderAssets);
     document.getElementById('asset-search').addEventListener('input', renderAssets);
     document.querySelector('.close-modal').addEventListener('click', () => {
         document.getElementById('detail-modal').classList.remove('active');
@@ -241,177 +223,26 @@ function switchTab(section) {
     // Hide all sections
     document.getElementById('analysis-section').style.display = 'none';
     document.getElementById('balancing-section').style.display = 'none';
-    document.getElementById('rfq-section').style.display = 'none';
 
     // Update Header Visibility
     const searchContainer = document.getElementById('search-container');
-    const lastUpdatedContainer = document.getElementById('last-updated-container');
+    const headerControls = document.getElementById('header-controls');
     const globalSentiment = document.getElementById('global-sentiment');
     const pageTitle = document.getElementById('page-title');
 
     if (section === 'analysis') {
         document.getElementById('analysis-section').style.display = 'block';
-        if (searchContainer) searchContainer.style.display = 'flex';
-        if (lastUpdatedContainer) lastUpdatedContainer.style.display = 'block';
-        if (globalSentiment) globalSentiment.style.display = 'block';
-        if (pageTitle) pageTitle.textContent = 'Market Analysis';
-        renderAssets();
+        searchContainer.style.display = 'flex';
+        headerControls.style.display = 'flex';
+        globalSentiment.style.display = 'block';
+        pageTitle.textContent = 'Market Analysis';
     } else if (section === 'balancing') {
         document.getElementById('balancing-section').style.display = 'block';
-        if (searchContainer) searchContainer.style.display = 'none';
-        if (lastUpdatedContainer) lastUpdatedContainer.style.display = 'none';
-        if (globalSentiment) globalSentiment.style.display = 'none';
-        if (pageTitle) pageTitle.textContent = 'Account Balancing';
-    } else if (section === 'rfq') {
-        document.getElementById('rfq-section').style.display = 'block';
-        if (searchContainer) searchContainer.style.display = 'none';
-        if (lastUpdatedContainer) lastUpdatedContainer.style.display = 'none';
-        if (globalSentiment) globalSentiment.style.display = 'none';
-        if (pageTitle) pageTitle.textContent = 'Request for Quote';
-        
-        // Display User ID in setup guide
-        const userIdDisplay = document.getElementById('user-id-display');
-        if (userIdDisplay) userIdDisplay.textContent = userId;
-
-        initSupabase();
+        searchContainer.style.display = 'none';
+        headerControls.style.display = 'none';
+        globalSentiment.style.display = 'none';
+        pageTitle.textContent = 'Balancing Tool';
     }
-}
-
-async function initSupabase() {
-    if (supabase) return;
-    if (CONFIG.supabaseUrl === 'YOUR_SUPABASE_URL') {
-        console.warn('Supabase URL not configured. Subscriptions disabled.');
-        return;
-    }
-    
-    try {
-        supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-        setupRealtimeSubscriptions();
-    } catch (err) {
-        console.error('Failed to initialize Supabase:', err);
-    }
-}
-
-function setupRealtimeSubscriptions() {
-    if (!supabase) return;
-    
-    console.log('Subscribing to live_sheet_rows for user:', userId);
-    const channel = supabase
-        .channel('live-prices')
-        .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'live_sheet_rows', filter: `user_id=eq.${userId}` },
-            (payload) => {
-                console.log('Realtime Update Received:', payload);
-                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                    handleIncomingRow(payload.new);
-                }
-            }
-        )
-        .subscribe();
-}
-
-const RFQ_STATE = {
-    SETUP: 'setup',
-    LIVE: 'live',
-    STAGING: 'staging',
-    FROZEN: 'frozen'
-};
-
-let currentRfqState = RFQ_STATE.SETUP;
-let liveRows = new Map();
-let stagingData = [];
-
-function moveToStaging() {
-    currentRfqState = RFQ_STATE.STAGING;
-    stagingData = Array.from(liveRows.values()).map(row => ({
-        ...row,
-        col_c: row.col_c, // Pos Amount
-        col_d: row.col_d, // Pair
-        col_e: row.col_e, // Value Date
-        col_f: row.col_f, // Indicative Price
-        col_j: row.col_j  // Account #
-    }));
-    renderStagingTable();
-}
-
-function handleIncomingRow(row) {
-    if (currentRfqState !== RFQ_STATE.LIVE && currentRfqState !== RFQ_STATE.SETUP) return;
-    
-    if (currentRfqState === RFQ_STATE.SETUP) {
-        currentRfqState = RFQ_STATE.LIVE;
-    }
-
-    liveRows.set(row.row_num, row);
-    renderLivePricingTable();
-}
-
-function renderLivePricingTable() {
-    const container = document.querySelector('.rfq-container');
-    const stage = document.getElementById('rfq-setup-instructions');
-    if (stage) stage.style.display = 'none';
-
-    // Check if table already exists, if so update rows, otherwise create it
-    let table = document.getElementById('live-pricing-table');
-    if (!table) {
-        container.innerHTML = `
-            <div class="rfq-stage">
-                <div class="stage-header">
-                    <h2>Live Pricing</h2>
-                    <div class="live-indicator">
-                        <span class="pulse"></span> Live Prices Active
-                    </div>
-                </div>
-                <div class="rfq-actions-bar">
-                    <button class="btn btn-primary" onclick="moveToStaging()">Stage RFQs for Editing</button>
-                </div>
-                <div class="rfq-table-wrapper">
-                    <table class="rfq-table" id="live-pricing-table">
-                        <thead>
-                            <tr>
-                                <th>Trade Date/Time</th>
-                                <th>Transaction #</th>
-                                <th>Pos Amount</th>
-                                <th>Pair</th>
-                                <th>Value Date</th>
-                                <th>Indicative Price</th>
-                                <th>Counter Amount</th>
-                                <th>Trader</th>
-                                <th>Counterparty</th>
-                                <th>Account #</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-        table = document.getElementById('live-pricing-table');
-    }
-
-    const tbody = table.querySelector('tbody');
-    const sortedRows = Array.from(liveRows.values()).sort((a, b) => a.row_num - b.row_num);
-
-    tbody.innerHTML = sortedRows.map(row => {
-        const posAmount = parseFloat(row.col_c) || 0;
-        const indicPrice = parseFloat(row.col_f) || 0;
-        const counterAmount = (posAmount * -indicPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        return `
-            <tr data-row-num="${row.row_num}">
-                <td>${row.col_a || ''}</td>
-                <td><span class="tx-badge">Generating...</span></td>
-                <td>${posAmount.toLocaleString()}</td>
-                <td>${row.col_d || ''}</td>
-                <td>${row.col_e || ''}</td>
-                <td class="live-price">${indicPrice.toFixed(5)}</td>
-                <td class="recalc-field">${counterAmount}</td>
-                <td>${row.col_h || ''}</td>
-                <td>${row.col_i || ''}</td>
-                <td>${row.col_j || ''}</td>
-            </tr>
-        `;
-    }).join('');
 }
 
 let originalExcelData = null;
@@ -516,258 +347,6 @@ function renderBalancingResults(result) {
     
     if (list1El) list1El.textContent = formatList(result["List 1"]);
     if (list2El) list2El.textContent = formatList(result["List 2"]);
-}
-
-function renderStagingTable() {
-    const container = document.querySelector('.rfq-container');
-    container.innerHTML = `
-        <div class="rfq-stage">
-            <div class="stage-header">
-                <h2>Stage 3: Review & Edit</h2>
-                <div class="status-badge staging">📝 Staging Mode</div>
-            </div>
-            <div class="rfq-actions-bar">
-                <button class="btn btn-orange" onclick="freezePrices()">❄️ Trade Best Prices</button>
-                <button class="btn btn-secondary btn-sm" onclick="resetToLive()">Reset to Live</button>
-            </div>
-            <div class="rfq-table-wrapper">
-                <table class="rfq-table" id="staging-table">
-                    <thead>
-                        <tr>
-                            <th>Trade Date/Time</th>
-                            <th>Transaction #</th>
-                            <th>Pos Amount</th>
-                            <th>Pair</th>
-                            <th>Value Date</th>
-                            <th>Indicative Price</th>
-                            <th>Counter Amount</th>
-                            <th>Trader</th>
-                            <th>Counterparty</th>
-                            <th>Account #</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${stagingData.map((row, idx) => {
-                            const posAmount = parseFloat(row.col_c) || 0;
-                            const indicPrice = parseFloat(row.col_f) || 0;
-                            const counterAmount = (posAmount * -indicPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            
-                            return `
-                                <tr data-row-num="${row.row_num}">
-                                    <td>${row.col_a || ''}</td>
-                                    <td><span class="tx-badge">Generating...</span></td>
-                                    <td><input type="number" class="table-input" value="${posAmount}" oninput="updateStagingField(${idx}, 'col_c', this.value)"></td>
-                                    <td><input type="text" class="table-input" value="${row.col_d || ''}" oninput="updateStagingField(${idx}, 'col_d', this.value)"></td>
-                                    <td><input type="text" class="table-input" value="${row.col_e || ''}" oninput="updateStagingField(${idx}, 'col_e', this.value)"></td>
-                                    <td class="live-price"><input type="number" step="0.00001" class="table-input" value="${indicPrice}" oninput="updateStagingField(${idx}, 'col_f', this.value)"></td>
-                                    <td class="recalc-field">${counterAmount}</td>
-                                    <td>${row.col_h || ''}</td>
-                                    <td>${row.col_i || ''}</td>
-                                    <td><input type="text" class="table-input" value="${row.col_j || ''}" oninput="updateStagingField(${idx}, 'col_j', this.value)"></td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
-
-function updateStagingField(index, field, value) {
-    stagingData[index][field] = value;
-    // Re-render only counter amount for this row to minimize flicker
-    const table = document.getElementById('staging-table');
-    const row = table.querySelectorAll('tbody tr')[index];
-    const posAmount = parseFloat(stagingData[index].col_c) || 0;
-    const indicPrice = parseFloat(stagingData[index].col_f) || 0;
-    const counterAmount = (posAmount * -indicPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    row.querySelector('.recalc-field').textContent = counterAmount;
-}
-
-function resetToLive() {
-    currentRfqState = RFQ_STATE.LIVE;
-    renderLivePricingTable();
-}
-
-function freezePrices() {
-    currentRfqState = RFQ_STATE.FROZEN;
-    renderFrozenFinalStage();
-}
-
-let selectedRecipients = {
-    blackheath: true,
-    velocity: true,
-    me: true
-};
-
-function toggleRecipient(id) {
-    selectedRecipients[id] = !selectedRecipients[id];
-}
-
-function renderFrozenFinalStage() {
-    const container = document.querySelector('.rfq-container');
-    
-    // Calculate final totals for summary
-    const totalTrades = stagingData.length;
-    const totalVolume = stagingData.reduce((sum, row) => sum + (parseFloat(row.col_c) || 0), 0);
-    
-    container.innerHTML = `
-        <div class="rfq-stage">
-            <div class="stage-header">
-                <h2>Stage 4: Final Review</h2>
-                <div class="status-badge frozen">❄️ Prices Frozen</div>
-            </div>
-            
-            <div class="final-summary-grid">
-                <div class="summary-card">
-                    <span class="label">Total Trades</span>
-                    <span class="value">${totalTrades}</span>
-                </div>
-                <div class="summary-card">
-                    <span class="label">Net Exposure</span>
-                    <span class="value">${totalVolume.toLocaleString()}</span>
-                </div>
-            </div>
-
-            <div class="rfq-table-wrapper">
-                <table class="rfq-table compact">
-                    <thead>
-                        <tr>
-                            <th>Transaction #</th>
-                            <th>Pair</th>
-                            <th>Amount</th>
-                            <th>Value Date</th>
-                            <th>Freeze Price</th>
-                            <th>Counter Amount</th>
-                            <th>Account #</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${stagingData.map(row => {
-                            const posAmount = parseFloat(row.col_c) || 0;
-                            const indicPrice = parseFloat(row.col_f) || 0;
-                            const counterAmount = (posAmount * -indicPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            return `
-                                <tr>
-                                    <td><span class="tx-badge">Pending...</span></td>
-                                    <td><strong>${row.col_d || ''}</strong></td>
-                                    <td>${posAmount.toLocaleString()}</td>
-                                    <td>${row.col_e || ''}</td>
-                                    <td class="live-price">${indicPrice.toFixed(5)}</td>
-                                    <td class="recalc-field">${counterAmount}</td>
-                                    <td>${row.col_j || ''}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="final-actions-section">
-                <div class="recipient-selection">
-                    <h3>Distribution Recipients</h3>
-                    <div class="checkbox-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" checked onchange="toggleRecipient('blackheath')">
-                            <span class="checkmark"></span> Blackheath
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" checked onchange="toggleRecipient('velocity')">
-                            <span class="checkmark"></span> Velocity
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" checked onchange="toggleRecipient('me')">
-                            <span class="checkmark"></span> Send to Me
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="submission-area">
-                    <button class="btn btn-primary btn-lg" id="submit-rfq-btn" onclick="submitRFQ()">🚀 Submit RFQ to Webhook</button>
-                    <button class="btn btn-secondary" onclick="resetToLive()">Cancel & Start Over</button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function submitRFQ() {
-    const btn = document.getElementById('submit-rfq-btn');
-    btn.disabled = true;
-    btn.innerHTML = `<span class="loading-spinner-xs"></span> Submitting...`;
-
-    const payload = {
-        htmlContent: document.querySelector('.rfq-table-wrapper').innerHTML,
-        transactionData: stagingData,
-        recipients: selectedRecipients,
-        timestamp: new Date().toISOString(),
-        userId: userId
-    };
-
-    try {
-        const response = await fetch('https://hook.us2.make.com/sz98titlb1viukuk362e6p46mdekz0f0', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            renderSuccessScreen();
-        } else {
-            throw new Error('Submission failed');
-        }
-    } catch (err) {
-        console.error('Submission error:', err);
-        btn.disabled = false;
-        btn.innerHTML = `🚀 Retry Submission`;
-        alert('Failed to submit RFQ. Please check your connection and try again.');
-    }
-}
-
-function renderSuccessScreen() {
-    const container = document.querySelector('.rfq-container');
-    container.innerHTML = `
-        <div class="success-screen">
-            <div class="success-icon">✅</div>
-            <h2>RFQ Submitted Successfully</h2>
-            <p>Your trade distribution is being processed. You will receive a confirmation email shortly.</p>
-            <div class="redirect-info">Redirecting to Live Feed in <span id="timer">5</span>s...</div>
-            <button class="btn btn-primary" onclick="resetToSetup()">Return Now</button>
-        </div>
-    `;
-
-    let timeLeft = 5;
-    const interval = setInterval(() => {
-        timeLeft--;
-        const timerEl = document.getElementById('timer');
-        if (timerEl) timerEl.textContent = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(interval);
-            resetToSetup();
-        }
-    }, 1000);
-}
-
-function resetToSetup() {
-    currentRfqState = RFQ_STATE.SETUP;
-    liveRows.clear();
-    stagingData = [];
-    switchTab('rfq'); // Trigger UI refresh
-}
-
-async function copyUserId() {
-    const el = document.getElementById('user-id-display');
-    if (!el) return;
-    try {
-        await navigator.clipboard.writeText(el.textContent);
-        const btn = event.target;
-        const originalText = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = originalText, 2000);
-    } catch (err) {
-        console.error('Failed to copy User ID:', err);
-    }
 }
 
 document.addEventListener('DOMContentLoaded', init);
