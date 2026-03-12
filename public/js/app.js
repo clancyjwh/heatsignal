@@ -52,10 +52,10 @@ async function init() {
 
 async function syncData() {
     try {
-        // Try to hit the API directly (Vercel warm start memory)
+        // Try to hit the API directly
         let response = await fetch('/api/update-analysis');
 
-        // If API fails or is empty, try the GitHub Raw file as ultimate fallback
+        // Ultimate fallback: GitHub Raw file
         if (!response.ok) {
             const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/main/${CONFIG.dataPath}?t=${Date.now()}`;
             response = await fetch(url);
@@ -72,7 +72,6 @@ async function syncData() {
                 return;
             }
         }
-        console.warn('Sync attempt returned no data.');
     } catch (err) {
         console.error('❌ Sync Failed:', err.message);
     }
@@ -84,19 +83,21 @@ function updateGlobalSentiment() {
     const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
     const el = document.querySelector('.sentiment-value');
     if (el) {
-        el.textContent = (avg > 0 ? '+' : '') + avg.toFixed(1);
+        el.textContent = (avg >= 0 ? '+' : '') + avg.toFixed(1);
         el.className = `sentiment-value ${avg >= 0 ? 'positive' : 'negative'}`;
     }
 }
 
 function renderAssets() {
     const grid = document.getElementById('asset-grid');
+    if (!grid) return;
+    
     const sortVal = document.getElementById('sort-control').value;
     const searchVal = document.getElementById('asset-search').value.toLowerCase();
 
     let sortedData = [...assetData];
-    if (sortVal === 'score-desc') sortedData.sort((a, b) => b.compositeScore - a.compositeScore);
-    else if (sortVal === 'score-asc') sortedData.sort((a, b) => a.compositeScore - b.compositeScore);
+    if (sortVal === 'score-desc') sortedData.sort((a, b) => (parseFloat(b.compositeScore) || 0) - (parseFloat(a.compositeScore) || 0));
+    else if (sortVal === 'score-asc') sortedData.sort((a, b) => (parseFloat(a.compositeScore) || 0) - (parseFloat(b.compositeScore) || 0));
     else if (sortVal === 'name') sortedData.sort((a, b) => a.pair.localeCompare(b.pair));
 
     if (searchVal) {
@@ -129,6 +130,8 @@ function showDetail(asset) {
     const body = document.getElementById('modal-body');
     const score = parseFloat(asset.compositeScore) || 0;
     const displayScore = score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
+    
+    // Normalize -10 to +10 into 0 to 100%
     const gaugePercent = ((score + 10) / 20) * 100;
     const sentiment = score >= 0 ? "Positive" : "Negative";
     const intensityClass = getValueIntensityClass(score);
@@ -141,24 +144,26 @@ function showDetail(asset) {
             <div class="asc-gauge">
                 <div class="asc-gauge-fill" style="width: ${gaugePercent}%"></div>
             </div>
-            <div class="asc-gauge-markers">
+            <div class="asc-gauge-markers" style="display: flex; justify-content: space-between; font-size: 0.75rem; opacity: 0.8; font-weight: bold; margin-top: 0.5rem;">
                 <span>-10</span>
                 <span>0</span>
                 <span>+10</span>
             </div>
         </div>
-        <h3 class="technical-indicators-title">Technical Indicators</h3>
-        <div class="indicator-grid-detail">
+        <h3 class="technical-indicators-title" style="margin-top: 2rem; margin-bottom: 1.5rem;">Technical Indicators</h3>
+        <div class="indicator-grid-detail" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             ${INDICATORS.map(ind => {
-        const val = asset.inputs ? (asset.inputs[ind] || 0) : 0;
-        const indClass = getValueIntensityClass(val);
-        return `
-                    <div class="indicator-card ${indClass}">
-                        <span class="ind-label-detail">${ind}</span>
-                        <div class="ind-value-detail">${parseFloat(val) >= 0 ? '+' : ''}${parseFloat(val).toFixed(1)}</div>
+                const val = asset.inputs ? (parseFloat(asset.inputs[ind]) || 0) : 0;
+                const indClass = getValueIntensityClass(val);
+                return `
+                    <div class="indicator-card ${indClass}" style="padding: 1.5rem; text-align: center; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        <span class="ind-label-detail" style="font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">${ind}</span>
+                        <div class="ind-value-detail" style="font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800;">
+                            ${val >= 0 ? '+' : ''}${val.toFixed(1)}
+                        </div>
                     </div>
                 `;
-    }).join('')}
+            }).join('')}
         </div>
     `;
     modal.classList.add('active');
@@ -218,13 +223,12 @@ function setupEventListeners() {
 function switchTab(section) {
     // Update active state in nav
     document.querySelectorAll('.main-nav li').forEach(li => li.classList.remove('active'));
-    document.querySelector(`.main-nav li[data-section="${section}"]`).classList.add('active');
+    document.querySelector(`.main-nav li[data-section="${section}"]`)?.classList.add('active');
 
     // Hide all sections
-    document.getElementById('analysis-section').style.display = 'none';
-    document.getElementById('balancing-section').style.display = 'none';
+    document.querySelectorAll('.dashboard-section').forEach(s => s.style.display = 'none');
 
-    // Update Header Visibility
+    // Update Header Visibility & Content
     const searchContainer = document.getElementById('search-container');
     const headerControls = document.getElementById('header-controls');
     const globalSentiment = document.getElementById('global-sentiment');
@@ -242,6 +246,21 @@ function switchTab(section) {
         headerControls.style.display = 'none';
         globalSentiment.style.display = 'none';
         pageTitle.textContent = 'Balancing Tool';
+    } else if (section === 'rfq') {
+        document.getElementById('rfq-section').style.display = 'block';
+        searchContainer.style.display = 'none';
+        headerControls.style.display = 'none';
+        globalSentiment.style.display = 'none';
+        pageTitle.textContent = 'RFQ Trading Platform';
+        
+        // Signal rfq.js to re-render or init if needed
+        window.dispatchEvent(new CustomEvent('rfq-tab-active'));
+    } else if (section === 'pricing') {
+        document.getElementById('pricing-section').style.display = 'block';
+        searchContainer.style.display = 'none';
+        headerControls.style.display = 'none';
+        globalSentiment.style.display = 'none';
+        pageTitle.textContent = 'Pricing Module';
     }
 }
 
@@ -337,16 +356,74 @@ function renderBalancingResults(result) {
 
     const formatList = (str) => {
         if (!str) return "No data available";
-        // Split by comma+space or comma, then join with newlines
         return str.split(/,\s*/).map(item => item.trim()).join('\n');
     };
 
     // 1. Handle Lists
     const list1El = document.getElementById('list-1-content');
     const list2El = document.getElementById('list-2-content');
-    
     if (list1El) list1El.textContent = formatList(result["List 1"]);
     if (list2El) list2El.textContent = formatList(result["List 2"]);
+
+    // 2. Handle Spreadsheet Data
+    const tbody = document.getElementById('balance-body');
+    const tfoot = document.getElementById('balance-footer');
+    if (!tbody || !tfoot) return;
+
+    tbody.innerHTML = '';
+    
+    let spreadsheetData = [];
+    try {
+        const rawJson = result["Balance Spreadsheet"] || '[]';
+        spreadsheetData = JSON.parse(rawJson);
+    } catch (e) {
+        console.error("Failed to parse spreadsheet JSON:", e);
+    }
+
+    let sum1 = 0, sum2 = 0, sumChange = 0;
+
+    spreadsheetData.forEach(row => {
+        const pair = row["Pair"] || "Unknown";
+        const oldRatio = parseFloat(row["Old Ratio"]) || 0;
+        const newRatio = parseFloat(row["New Ratio"]) || 0;
+        const change = newRatio - oldRatio;
+
+        sum1 += oldRatio;
+        sum2 += newRatio;
+        sumChange += change;
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        
+        const changeClass = getValueIntensityClass(change);
+
+        tr.innerHTML = `
+            <td style="padding: 1rem; font-weight: 600;">${pair}</td>
+            <td style="padding: 1rem;">${oldRatio.toFixed(2)}</td>
+            <td style="padding: 1rem;">${newRatio.toFixed(2)}</td>
+            <td style="padding: 0.8rem;">
+                <span class="${changeClass}" style="display: inline-block; padding: 0.3rem 0.8rem; border-radius: 6px; min-width: 60px; text-align: center;">
+                    ${change > 0 ? '+' : ''}${change.toFixed(2)}
+                </span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // 3. Render Totals
+    const totalChangeClass = getValueIntensityClass(sumChange);
+    tfoot.innerHTML = `
+        <tr>
+            <td style="padding: 1.2rem;">TOTAL</td>
+            <td style="padding: 1.2rem;">${sum1.toFixed(2)}</td>
+            <td style="padding: 1.2rem;">${sum2.toFixed(2)}</td>
+            <td style="padding: 1.2rem;">
+                <span class="${totalChangeClass}" style="display: inline-block; padding: 0.3rem 0.8rem; border-radius: 6px; min-width: 60px; text-align: center;">
+                    ${sumChange > 0 ? '+' : ''}${sumChange.toFixed(2)}
+                </span>
+            </td>
+        </tr>
+    `;
 }
 
 document.addEventListener('DOMContentLoaded', init);

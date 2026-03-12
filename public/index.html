@@ -16,39 +16,36 @@
 
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+        <nav class="sidebar">
             <div class="logo">
                 <span class="logo-icon">🔥</span>
                 <span class="logo-text">HEATSIGNAL</span>
             </div>
-            <nav class="main-nav">
-                <ul>
-                    <li class="active" data-section="analysis">
-                        <span class="icon">📊</span>
-                        <span class="label">Analysis</span>
-                    </li>
-                    <li data-section="balancing">
-                        <span class="icon">⚖️</span>
-                        <span class="label">Balancing</span>
-                    </li>
-                    <li data-section="rfq">
-                        <span class="icon">📩</span>
-                        <span class="label">RFQ</span>
-                    </li>
-                    <li data-section="pricing">
-                        <span class="icon">🔍</span>
-                        <span class="label">Find prices</span>
-                    </li>
-                </ul>
-            </nav>
+            <ul class="main-nav">
+                <li class="active" data-section="analysis">
+                    <span class="icon">📊</span>
+                    <span>Market Analysis</span>
+                </li>
+                <li data-section="balancing">
+                    <span class="icon">⚖️</span>
+                    <span>Balancing Tool</span>
+                </li>
+                <li data-section="rfq">
+                    <span class="icon">📩</span>
+                    <span>RFQ Trading</span>
+                </li>
+                <li data-section="pricing">
+                    <span class="icon">🔍</span>
+                    <span>Pricing Module</span>
+                </li>
+            </ul>
             <div class="sidebar-footer">
                 <div class="status-indicator">
                     <span class="pulse"></span>
                     Live Market Feed
                 </div>
             </div>
-        </aside>
+        </nav>
 
         <!-- Main Content -->
         <main class="content">
@@ -91,7 +88,7 @@
                     </div>
 
                     <div id="balancing-results-container" style="display: none;">
-                        <div class="results-header">
+                        <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                             <h2>Balancing Results</h2>
                             <button class="btn btn-secondary" onclick="resetBalancing()">Try New File</button>
                         </div>
@@ -106,7 +103,121 @@
                                 <div id="list-2-content" class="list-content"></div>
                             </div>
                         </div>
+
+                        <div id="balance-table-container" class="glass-panel" style="margin-top: 2rem;">
+                            <h3 style="margin-bottom: 1.5rem; opacity: 0.7;">Detailed Balance Spreadsheet</h3>
+                            <div class="table-container" style="overflow-x: auto;">
+                                <table id="balance-table" style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <th style="padding: 1rem;">Pair</th>
+                                            <th style="padding: 1rem;">Old Ratio</th>
+                                            <th style="padding: 1rem;">New Ratio</th>
+                                            <th style="padding: 1rem;">Change</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="balance-body"></tbody>
+                                    <tfoot id="balance-footer" style="border-top: 2px solid rgba(255,255,255,0.2); font-weight: bold;"></tfoot>
+                                </table>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- RFQ Section -->
+            <section class="dashboard-section" id="rfq-section" style="display: none;">
+                <div id="rfq-container">
+                    <div id="setup-view" class="glass-panel">
+                        <h2>Welcome to RFQ</h2>
+                        <p>Please enter your trader initials to begin managing requests.</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('initials-modal').style.display = 'flex'">Set Trader Initials</button>
+                    </div>
+
+                    <div id="main-workflow" class="hidden">
+                        <div class="glass-panel" style="margin-bottom: 2rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h2>Live Pricing Stream</h2>
+                                    <p style="font-size: 0.9rem; color: #a0aec0; margin-top: 0.5rem;">
+                                        Trader: <span id="trader-id-display" style="color: var(--accent-blue); font-weight: bold;">--</span> | 
+                                        Session: <span id="session-id-display">--</span>
+                                    </p>
+                                </div>
+                                <div id="status-indicator">
+                                    <span class="badge" id="rfq-live-badge" style="background: rgba(0, 255, 127, 0.2); color: #00ff7f; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; border: 1px solid rgba(0, 255, 127, 0.3);">
+                                        <i class="fas fa-satellite-dish"></i> Live Pricing Active
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="table-container" style="overflow-x: auto; margin-top: 1.5rem;">
+                                <table id="rfq-table" style="width: 100%; border-collapse: collapse; min-width: 1000px;">
+                                    <thead>
+                                        <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <th style="padding: 1rem;">Time (A)</th>
+                                            <th style="padding: 1rem;">Trans # (B)</th>
+                                            <th style="padding: 1rem;">Amount (C)</th>
+                                            <th style="padding: 1rem;">Pair (D)</th>
+                                            <th style="padding: 1rem;">Value Date (E)</th>
+                                            <th style="padding: 1rem;">Price (F)</th>
+                                            <th style="padding: 1rem;">Counter Amt (G)</th>
+                                            <th style="padding: 1rem;">Trader (H)</th>
+                                            <th style="padding: 1rem;">CParty (I)</th>
+                                            <th style="padding: 1rem;">Account (J)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rfq-body"></tbody>
+                                </table>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; gap: 1rem;">
+                                <button id="freeze-prices-btn" class="btn btn-secondary">
+                                    <i class="fas fa-lock"></i> Freeze Prices
+                                </button>
+                                <button id="trade-best-prices-btn" class="btn btn-primary hidden">
+                                    <i class="fas fa-check-double"></i> Trade Best Prices
+                                </button>
+                            </div>
+
+                            <div id="final-actions" class="hidden" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <h3>Finalize RFQ Distribution</h3>
+                                <p style="color: #a0aec0; margin-bottom: 1.5rem;">Select recipients for this trade request.</p>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                    <label class="glass-panel" style="display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 1rem;">
+                                        <input type="checkbox" class="recipient-checkbox" value="blackheath">
+                                        <span>Blackheath</span>
+                                    </label>
+                                    <label class="glass-panel" style="display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 1rem;">
+                                        <input type="checkbox" class="recipient-checkbox" value="velocity">
+                                        <span>Velocity</span>
+                                    </label>
+                                    <label class="glass-panel" style="display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 1rem;">
+                                        <input type="checkbox" class="recipient-checkbox" value="me" checked>
+                                        <span>Send to Me</span>
+                                    </label>
+                                    <label class="glass-panel" style="display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 1rem;">
+                                        <input type="checkbox" id="onedrive-checkbox">
+                                        <span>Save to OneDrive</span>
+                                    </label>
+                                </div>
+
+                                <button id="submit-rfq-btn" class="btn btn-primary" style="width: 100%; padding: 1.2rem; font-size: 1.1rem;" disabled>
+                                    <i class="fas fa-paper-plane"></i> Submit Request for Quote
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section (Placeholder) -->
+            <section class="dashboard-section" id="pricing-section" style="display: none;">
+                <div class="glass-panel" style="text-align: center; padding: 4rem;">
+                    <i class="fas fa-search-dollar" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <h2>Pricing Module</h2>
+                    <p style="color: var(--text-secondary);">Advanced liquidity and pricing discovery module coming soon.</p>
                 </div>
             </section>
         </main>
@@ -122,7 +233,44 @@
         </div>
     </div>
 
+    <!-- RFQ Modals -->
+    <div id="initials-modal" class="modal">
+        <div class="glass-panel modal-content" style="width: 400px; text-align: center;">
+            <h3>Trader Identification</h3>
+            <p>These initials will be used for your transaction IDs.</p>
+            <input type="text" id="initials-input" placeholder="JD" maxlength="3" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.8rem; color: white; text-transform: uppercase; font-size: 1.2rem; width: 120px; text-align: center; margin: 1rem 0;">
+            <br>
+            <button id="save-initials" class="btn btn-primary">Confirm Initials</button>
+        </div>
+    </div>
+
+    <div id="warning-modal" class="modal">
+        <div class="glass-panel modal-content">
+            <h3 style="color: #ffcc00;"><i class="fas fa-exclamation-triangle"></i> Confirmation Required</h3>
+            <p id="warning-message"></p>
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                <button id="confirm-warning" style="background: #ffcc00; color: black; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm Change</button>
+                <button onclick="document.getElementById('warning-modal').style.display='none'" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay" class="modal">
+        <div class="glass-panel modal-content" style="padding: 3rem; text-align: center;">
+            <div style="font-size: 4rem; color: #00ff7f; margin-bottom: 1rem;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Thank You</h2>
+            <p>Your request has been sent successfully.</p>
+            <div style="margin-top: 2rem; color: #a0aec0;">
+                Redirecting in <span id="countdown" style="color: white; font-weight: bold;">5</span> seconds...
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/app.js"></script>
+    <script src="js/rfq.js"></script>
 </body>
 
 </html>
