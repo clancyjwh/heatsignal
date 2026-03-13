@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeatSignal | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo-container">
+                <h1 class="logo">HEAT<span>SIGNAL</span></h1>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="home">
+                    <span class="icon">🏠</span>
+                    <span class="label">Home</span>
+                </li>
+                <li data-tab="balance">
+                    <span class="icon">📊</span>
+                    <span class="label">Balance</span>
+                </li>
+                <li data-tab="rfq">
+                    <span class="icon">⚡</span>
+                    <span class="label">RFQ</span>
+                </li>
+            </ul>
+            <div class="user-profile">
+                <div class="avatar">CH</div>
+                <div class="user-info">
+                    <span class="name">Clancy Hodgins</span>
+                    <span class="status">Pro Trader</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <header class="top-bar">
+                <h2 id="tab-title">Home</h2>
+                <div class="header-actions">
+                    <span id="market-status" class="status-badge live">Live Market</span>
+                    <button class="btn btn-icon">🔔</button>
+                    <button class="btn btn-icon">⚙️</button>
+                </div>
+            </header>
+
+            <section id="tab-content" class="fade-in">
+                <!-- Content will be injected here by app.js -->
+                <div class="welcome-card">
+                    <h3>Welcome back, Clancy.</h3>
+                    <p>HeatSignal is now reset and ready for the RFQ implementation.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
